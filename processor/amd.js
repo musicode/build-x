@@ -1,8 +1,12 @@
 var path = require('path');
 var amdDeploy = require('amd-deploy');
 var filePathToResourceId = require('amd-deploy/lib/filePathToResourceId');
+var resourceIdToFilePath = require('amd-deploy/lib/resourceIdToFilePath');
 
 var html2js = require('html2js');
+
+var Node = require('fe-tree/lib/Node');
+var feTree = require('fe-tree');
 var feTreeUtil = require('fe-tree/lib/util');
 
 var config = require('../config');
@@ -27,7 +31,8 @@ var styleSuffix = '_css';
 
 function tplReader(node) {
 
-    var resourceId = filePathToResourceId(node.file, config.sourceAmdConfig)[0];
+    var amdConfig = config.sourceAmdConfig;
+    var resourceId = filePathToResourceId(node.file, amdConfig)[0];
     resourceId = feTreeUtil.removeExtname(resourceId);
 
     var code = html2js(
@@ -37,16 +42,23 @@ function tplReader(node) {
         }
     );
 
-    return 'define("'
-        + resourceId
-        + tplSuffix
+    var moduleId = resourceId + tplSuffix;
+    var content = 'define("'
+        + moduleId
         + '", [], function () { return ' + code + '});';
+
+    var file = resourceIdToFilePath(moduleId, amdConfig);
+
+    feTree.dependencyMap[file] = new Node(file, new Buffer(content));
+
+    return content;
 
 }
 
 function styleReader(node) {
 
-    var resourceId = filePathToResourceId(node.file, config.sourceAmdConfig)[0];
+    var amdConfig = config.sourceAmdConfig;
+    var resourceId = filePathToResourceId(node.file, amdConfig)[0];
     resourceId = feTreeUtil.removeExtname(resourceId);
 
     var code = html2js(
@@ -56,10 +68,16 @@ function styleReader(node) {
         }
     );
 
-    return 'define("'
-        + resourceId
-        + styleSuffix
+    var moduleId = resourceId + styleSuffix;
+    var content = 'define("'
+        + moduleId
         + '", [], function () { return ' + code + '});';
+
+    var file = resourceIdToFilePath(moduleId, amdConfig);
+
+    feTree.dependencyMap[file] = new Node(file, new Buffer(content));
+
+    return content;
 
 }
 

@@ -127,9 +127,10 @@ function compareFile() {
         var updateChange = function (changes) {
             changes.forEach(function (file) {
                 dependencyMap[file].filter = false;
-                updateChange(
-                    reverseDependencyMap[file]
-                );
+                var changes = reverseDependencyMap[file];
+                if (changes) {
+                    updateChange(changes);
+                }
             });
         };
 
@@ -280,6 +281,10 @@ function cleanCache() {
         if (node.file.startsWith(config.outputViewDir)) {
             config.walkNode(node, function (dependency, node) {
                 var dependencyNode = dependencyMap[dependency.file];
+                if (!dependencyNode) {
+                    console.log(dependency, node.file);
+                    return;
+                }
                 dependency.raw = feTreeUtil.getHashedFile(
                     dependency.raw,
                     dependencyNode.calculate()
