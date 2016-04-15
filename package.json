@@ -1,0 +1,31 @@
+{
+  "name": "build-x",
+  "version": "1.0.0",
+  "description": "fe build",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/musicode/build-x.git"
+  },
+  "author": "musicode",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/musicode/build-x/issues"
+  },
+  "homepage": "https://github.com/musicode/build-x#readme",
+  "dependencies": {
+    "amd-deploy": "^1.0.31",
+    "autoprefixer": "^6.3.6",
+    "css-minifiers": "^2.0.1",
+    "fe-tree": "0.0.8",
+    "fs-extended": "^0.2.1",
+    "glob": "^7.0.3",
+    "html2js": "^0.2.0",
+    "less": "^2.6.1",
+    "stylus": "^0.54.2",
+    "uglifyjs": "^2.4.10"
+  }
+}
