@@ -164,10 +164,6 @@ exports.build = function (node, dependencyMap) {
         minify: config.release,
         callback: function (code) {
             node.content = code;
-            if (/\.styl\b/g.test(code)) {
-                console.log('!!!!!!!!!!!!!!!!')
-                console.log(node.file);
-            }
         }
     });
 

@@ -1,6 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 
+var feTree = require('fe-tree');
 var feTreeRule = require('fe-tree/lib/rule');
 var feTreeUtil = require('fe-tree/lib/util');
 
@@ -100,18 +101,21 @@ var filterDependencies = [
 // 文件路径中有这些字符就认为是无法解析的
 var illegalCharInFilePath = /[\${}]/;
 
-var sourcePrefix2Dir = {
-    '{{ $static_origin }}/': projectDir,
+var commonPrefix2Dir = {
     '/src/': srcDir,
     'src/': srcDir,
+    '/asset/': outputSrcDir,
+    'asset/': outputSrcDir,
+};
+
+var sourcePrefix2Dir = {
+    '{{ $static_origin }}/': projectDir,
     '/dep/': depDir,
     'dep/': depDir,
 };
 
 var outputPrefix2Dir = {
     '{{ $static_origin }}/': outputDir,
-    '/asset/': outputSrcDir,
-    'asset/': outputSrcDir,
     '/dep/': outputDepDir,
     'dep/': outputDepDir,
 };
@@ -147,7 +151,7 @@ function getDependencyFile(dependency, node) {
                 return path.join(dir, raw) + suffix;
             })
             .forEach(function (item) {
-                if (!file && fs.existsSync(item)) {
+                if (!file && (feTree.dependencyMap[item] || fs.existsSync(item))) {
                     file = item;
                 }
             });
@@ -333,19 +337,30 @@ exports.processDependency = function (dependency, node) {
 
     if (!file) {
 
-        var prefix2Dir = node.file.startsWith(outputDir)
+        var prefix2Dir = { };
+
+        if (commonPrefix2Dir) {
+            feTreeUtil.extend(prefix2Dir, commonPrefix2Dir);
+        }
+
+        var specifiedPrefix2Dir = node.file.startsWith(outputDir)
             ? outputPrefix2Dir
             : sourcePrefix2Dir;
 
-        if (prefix2Dir) {
-            for (var prefix in prefix2Dir) {
-                if (raw.indexOf(prefix) === 0) {
-                    file = path.join(
-                        prefix2Dir[prefix],
-                        raw.substr(prefix.length)
-                    );
-                    break;
-                }
+        if (specifiedPrefix2Dir) {
+            feTreeUtil.extend(
+                prefix2Dir,
+                specifiedPrefix2Dir
+            );
+        }
+
+        for (var prefix in prefix2Dir) {
+            if (raw.indexOf(prefix) === 0) {
+                file = path.join(
+                    prefix2Dir[prefix],
+                    raw.substr(prefix.length)
+                );
+                break;
             }
         }
 
@@ -404,10 +419,9 @@ exports.processDependency = function (dependency, node) {
         }
 
     }
-if (file.endsWith('/novip.png')) {
-    console.log(dependency, node.file);
-}
+
     return dependency;
+
 };
 
 exports.walkNode = function (node, processDependency) {
@@ -420,12 +434,11 @@ exports.walkNode = function (node, processDependency) {
             : exports.sourceAmdConfig,
         processDependency: function (dependency, node) {
             dependency = exports.processDependency(dependency, node);
-            if (!dependency) {
-                return;
+            if (dependency) {
+                return processDependency
+                    ? processDependency(dependency, node)
+                    : dependency;
             }
-            return processDependency
-                ? processDependency(dependency, node)
-                : dependency;
         }
     });
 };

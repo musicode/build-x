@@ -192,7 +192,7 @@ exports.buildFile = function () {
                     return processor.build(this, dependencyMap, reverseDependencyMap);
                 };
                 node.onBuildStart = function () {
-                    console.log('正在编译：' + this.file);
+                    console.log('正在编译：' + this.file, index);
                     this.prevContent = this.content;
                 };
                 node.onBuildEnd = function () {
@@ -260,11 +260,8 @@ exports.updateReference = function () {
         var node = dependencyMap[key];
         if (node.file.startsWith(config.outputDir)) {
             config.walkNode(node, function (dependency, node) {
-                var dependency = config.processDependency(dependency, node);
-                if (dependency) {
-                    dependency.raw = config.getOutputFile(dependency.raw);
-                    return dependency;
-                }
+                dependency.raw = config.getOutputFile(dependency.raw);
+                return dependency;
             });
         }
     }

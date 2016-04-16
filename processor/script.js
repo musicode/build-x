@@ -1,12 +1,15 @@
 var uglify = require('uglifyjs').minify;
 var config = require('../config');
+var amd = require('./amd');
 
 exports.extnames = [
     '.js'
 ];
 
 exports.is = function (node) {
-    return exports.extnames.indexOf(node.extname) >= 0;
+    if (exports.extnames.indexOf(node.extname) >= 0) {
+        return !amd.is(node);
+    }
 };
 
 exports.build = function (node) {
