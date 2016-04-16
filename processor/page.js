@@ -10,7 +10,7 @@ var extname = {
 
 exports.is = function (node) {
     if (extname[node.extname]) {
-        return node.file.startsWith(config.viewDir);
+        return feTreeUtil.match(node.file, config.pageFiles);
     }
 };
 

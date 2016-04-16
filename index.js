@@ -1,4 +1,5 @@
 
+var path = require('path');
 var argv = require('yargs').argv;
 var feTreeUtil = require('fe-tree/lib/util');
 
@@ -6,7 +7,8 @@ var config = require('./config');
 var task = require('./task');
 
 config.release = (argv.fast || !argv.release) ? false : true;
-config.compareLevel = argv.level ? 2 : 0;
+config.compareLevel = argv.compareLevel ? 2 : 0;
+config.hashFile = args.hashFile || path.join(config.projectDir, 'hash.json')
 
 
 var totalBenchmark = feTreeUtil.benchmark('总耗时：');

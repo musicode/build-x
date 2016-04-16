@@ -6,43 +6,35 @@ var feTreeUtil = require('fe-tree/lib/util');
 var srcName = 'src';
 var outputSrcName = 'asset';
 
-var projectDir = '/Users/zhujl/github/web-fe'//path.join(__dirname, '..');
-var viewDir = path.join(projectDir, 'view');
+var projectDir = '/Users/zhujl/github/marketing'//path.join(__dirname, '..');
 var srcDir = path.join(projectDir, srcName);
-var depDir = path.join(projectDir, 'dep');
+
 var outputDir = path.join(projectDir, 'output');
-var outputSrcDir = path.join(projectDir, 'output', outputSrcName);
-var outputViewDir = path.join(projectDir, 'output', 'view');
-var outputDepDir = path.join(projectDir, 'output', 'dep');
+var outputSrcDir = path.join(outputDir, outputSrcName);
 
 exports.projectDir = projectDir;
-exports.viewDir = viewDir;
-exports.srcDir = srcDir;
-exports.depDir = depDir;
-
 exports.outputDir = outputDir;
-exports.outputSrcDir = outputSrcDir;
-exports.outputViewDir = outputViewDir;
-exports.outputDepDir = outputDepDir;
 
-exports.directoryHashFile = path.join(projectDir, 'directoryHash.json');
+exports.directoryHashFile = null;
 exports.release = false;
 
 // 对比目录的深度，最小为 0
 exports.compareLevel = 2;
 
-exports.buildFiles = [
-    path.join(viewDir, '**/*.*'),
-    //path.join(srcDir, '**/*.*'),
-    path.join(depDir, '**/*.*'),
+// 页面文件，比如 smarty 模板、或 index.html、main.html、app.html 等
+exports.pageFiles = [
+    path.join(projectDir, 'view/**/*.*'),
 ];
 
-// 不添加 md5 的目录文件
-// 默认会给所有静态资源添加 md5
-// 但如果有些目录已经用版本号控制，可跳过
-exports.filterHashFiles = [
-    path.join(outputViewDir, '**/*.*'),
-    path.join(outputDepDir, '**/*.*'),
+// 静态资源
+exports.staticFiles = [
+    //path.join(srcDir, '**/*.*'),
+    path.join(projectDir, 'dep/**/*.*'),
+];
+
+// 给静态资源添加 md5
+exports.hashFiles = [
+    path.join(outputSrcDir, '**/*.*')
 ];
 
 var filterFiles = [

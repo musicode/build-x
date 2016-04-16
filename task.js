@@ -9,16 +9,14 @@ var feTreeUtil = require('fe-tree/lib/util');
 
 var config = require('./config');
 
-var processors = [
-    require('./processor/css'),
-    require('./processor/less'),
-    require('./processor/stylus'),
-    require('./processor/script'),
-    require('./processor/amd'),
-    require('./processor/html'),
-    require('./processor/smarty'),
-    require('./processor/other')
-];
+var cssProcessor = require('./processor/css');
+var lessProcessor = require('./processor/less');
+var stylusProcessor = require('./processor/stylus');
+var scriptProcessor = require('./processor/script');
+var amdProcessor = require('./processor/amd');
+var htmlProcessor = require('./processor/html');
+var pageProcessor = require('./processor/page');
+var otherProcessor = require('./processor/other');
 
 // 目录级别的 md5
 var directoryHash = { };
@@ -28,9 +26,14 @@ exports.parseSourceTree = function () {
 
     return new Promise(function (resolve) {
 
-        var counter = config.buildFiles.length;
+        var files = feTreeUtil.merge(
+            config.pageFiles,
+            config.staticFiles
+        );
 
-        config.buildFiles.forEach(function (pattern) {
+        var counter = files.length;
+
+        files.forEach(function (pattern) {
             glob(pattern, function (error, files) {
 
                 feTree.parse({
@@ -100,7 +103,7 @@ exports.compareFile = function () {
     }
 
     var prevHashMap = feTreeUtil.readJSON(
-        config.directoryHashFile
+        config.hashFile
     );
 
     if (prevHashMap) {
@@ -154,8 +157,19 @@ exports.buildFile = function () {
         if (node.filter) {
             continue;
         }
+
         var matched = false;
-        processors.forEach(function (processor, index) {
+
+        [
+            cssProcessor,
+            lessProcessor,
+            stylusProcessor,
+            scriptProcessor,
+            amdProcessor,
+            htmlProcessor,
+            pageProcessor,
+            otherProcessor
+        ].forEach(function (processor, index) {
             if (matched) {
                 return;
             }
@@ -197,7 +211,16 @@ exports.buildFile = function () {
                         });
                     }
                 };
+
                 nodes.push(node);
+
+                // 归类
+                var nodes = processor.nodes;
+                if (!Array.isArray(nodes)) {
+                    nodes = processor.nodes = [ ];
+                }
+                nodes.push(node);
+
             }
         });
     }
@@ -234,11 +257,10 @@ exports.updateReference = function () {
         if (node.file.startsWith(config.outputDir)) {
             config.walkNode(node, function (dependency, node) {
                 var dependency = config.processDependency(dependency, node);
-                if (!dependency) {
-                    return;
+                if (dependency) {
+                    dependency.raw = config.getOutputFile(dependency.raw);
+                    return dependency;
                 }
-                dependency.raw = config.getOutputFile(dependency.raw);
-                return dependency;
             });
         }
     }
@@ -253,13 +275,12 @@ exports.cleanCache = function () {
 
     var files = Object.keys(dependencyMap).filter(function (file) {
 
-        var matched = file.startsWith(config.outputDir);
+        var matched = false;
 
-        if (matched
-            && Array.isArray(config.filterHashFiles)
-            && feTreeUtil.match(file, config.filterHashFiles)
+        if (Array.isArray(config.hashFiles)
+            && feTreeUtil.match(file, config.hashFiles)
         ) {
-            matched = false;
+            matched = true;
         }
 
         return matched;
@@ -282,9 +303,9 @@ exports.cleanCache = function () {
     });
 
     // 修改模板里的引用
-    for (var key in dependencyMap) {
-        var node = dependencyMap[key];
-        if (node.file.startsWith(config.outputViewDir)) {
+    var pageNodes = pageProcessor.nodes;
+    if (Array.isArray(pageNodes)) {
+        pageNodes.forEach(function (node) {
             config.walkNode(node, function (dependency, node) {
                 var dependencyNode = dependencyMap[dependency.file];
                 if (dependencyNode) {
@@ -295,7 +316,7 @@ exports.cleanCache = function () {
                     return dependency;
                 }
             });
-        }
+        });
     }
 
 }
@@ -311,7 +332,7 @@ exports.outputFile = function () {
     }
 
     feTreeUtil.writeJSON(
-        config.directoryHashFile,
+        config.hashFile,
         directoryHash
     );
 
