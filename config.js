@@ -1,3 +1,4 @@
+var fs = require('fs');
 var path = require('path');
 
 var feTreeRule = require('fe-tree/lib/rule');
@@ -24,6 +25,16 @@ exports.compareLevel = 2;
 // 页面文件，比如 smarty 模板、或 index.html、main.html、app.html 等
 exports.pageFiles = [
     path.join(projectDir, 'view/**/*.*'),
+    path.join(projectDir, 'add.html'),
+    path.join(projectDir, 'list.html'),
+    path.join(projectDir, 'couponAdd.html'),
+    path.join(projectDir, 'couponDetail.html'),
+    path.join(projectDir, 'couponGrant.html'),
+    path.join(projectDir, 'couponList.html'),
+    path.join(projectDir, 'couponSend.html'),
+    path.join(projectDir, 'delegate.html'),
+    path.join(projectDir, 'coupon-m/*.html'),
+    path.join(projectDir, 'discount-m/*.html')
 ];
 
 // 静态资源
@@ -93,6 +104,27 @@ var outputPrefix2Dir = {
     '/asset/': outputSrcDir,
     'asset/': outputSrcDir,
 };
+
+function getDependencyFile(dependency, node) {
+    var raw = dependency.raw;
+    var file = dependency.file;
+    if (node.extname === '.styl'
+        && /^[a-z]/i.test(raw)
+    ) {
+        var suffix = dependency.extname || '';
+        var testFiles = [
+            path.join(projectDir, raw) + suffix,
+            path.join(projectDir, 'src', raw) + suffix
+        ];
+        for (var i = 0, len = testFiles.length; i < len; i++) {
+            if (fs.existsSync(testFiles[i])) {
+                file = testFiles[i];
+                break;
+            }
+        }
+    }
+    return file;
+}
 
 var amdPlugins = [
     'jquery', 'html', 'text', 'tpl', 'css', 'js'
@@ -287,6 +319,10 @@ exports.processDependency = function (dependency, node) {
                     break;
                 }
             }
+        }
+
+        if (!file) {
+            file = getDependencyFile(dependency, node);
         }
 
         if (!file && feTreeUtil.isRelativePath(raw)) {

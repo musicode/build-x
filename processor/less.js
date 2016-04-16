@@ -2,7 +2,7 @@ var less = require('less');
 var config = require('../config');
 
 var css = require('./css');
-var smarty = require('./smarty');
+var page = require('./page');
 var html = require('./html');
 var amd = require('./amd');
 
@@ -16,7 +16,7 @@ function isRootStyle(node, dependencyMap, reverseDependencyMap) {
         && files.filter(
             function (file) {
                 var node = dependencyMap[file];
-                return smarty.is(node, dependencyMap, reverseDependencyMap)
+                return page.is(node, dependencyMap, reverseDependencyMap)
                     || html.is(node, dependencyMap, reverseDependencyMap)
                     || amd.is(node, dependencyMap, reverseDependencyMap);
             }

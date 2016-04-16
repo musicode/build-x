@@ -1,6 +1,6 @@
 var readRequireConfig = require('amd-deploy/lib/readRequireConfig');
 var config = require('../config');
-var smarty = require('./smarty');
+var page = require('./page');
 
 var extname = {
     '.html': 1,
@@ -9,7 +9,7 @@ var extname = {
 
 exports.is = function (node) {
     if (extname[node.extname]) {
-        return !smarty.is(node);
+        return !page.is(node);
     }
 };
 

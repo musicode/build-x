@@ -8,7 +8,7 @@ var task = require('./task');
 
 config.release = (argv.fast || !argv.release) ? false : true;
 config.compareLevel = argv.compareLevel ? 2 : 0;
-config.hashFile = args.hashFile || path.join(config.projectDir, 'hash.json')
+config.hashFile = argv.hashFile || path.join(config.projectDir, 'hash.json')
 
 
 var totalBenchmark = feTreeUtil.benchmark('总耗时：');

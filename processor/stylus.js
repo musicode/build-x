@@ -2,7 +2,7 @@ var stylus = require('stylus');
 var path = require('path');
 
 var config = require('../config');
-var smarty = require('./smarty');
+var page = require('./page');
 var html = require('./html');
 var css = require('./css');
 var amd = require('./amd');
@@ -17,7 +17,7 @@ function isRootStyle(node, dependencyMap, reverseDependencyMap) {
         && files.filter(
             function (file) {
                 var node = dependencyMap[file];
-                return smarty.is(node, dependencyMap, reverseDependencyMap)
+                return page.is(node, dependencyMap, reverseDependencyMap)
                     || html.is(node, dependencyMap, reverseDependencyMap)
                     || amd.is(node, dependencyMap, reverseDependencyMap);
             }
@@ -43,7 +43,9 @@ exports.build = function (node) {
         )
         .set('filename', node.file)
         .set('compress', config.release)
-        .define('url', stylus.resolver({ nocheck: true }))
+        .define('url', stylus.resolver({
+            nocheck: true
+        }))
         .render(function (error, output) {
             if (error) {
                 console.error(error);
