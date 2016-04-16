@@ -42,7 +42,7 @@ config.buildFiles.forEach(function (pattern) {
         if (--counter === 0) {
             readBenchmark();
             compareFile();
-            compileFile()
+            buildFile()
             .then(function () {
                 updateReference();
                 cleanCache();
@@ -56,6 +56,7 @@ config.buildFiles.forEach(function (pattern) {
 
 // 对比文件变化
 function compareFile() {
+
     var benchmark = feTreeUtil.benchmark('对比文件变化耗时：');
 
     var hashMap = { };
@@ -144,92 +145,87 @@ function compareFile() {
 }
 
 // 把文件编译成浏览器可执行的版本
-function compileFile() {
+function buildFile() {
     var benchmark = feTreeUtil.benchmark('编译文件耗时：');
 
     var dependencyMap = feTree.dependencyMap;
     var reverseDependencyMap = feTree.reverseDependencyMap;
 
-    var tasks = [ ];
-    // 按 processor 遍历比较好，可以控制资源的处理顺序
-    // 比如先 build 样式，这样 amd 在打包的时候，动态样式资源都是 css 了
-    processors.forEach(function (processor) {
-        for (var key in dependencyMap) {
-            var node = dependencyMap[key];
-            if (node.filter) {
-                continue;
+    var nodes = [ ];
+
+    var fileChanges = { };
+
+    for (var key in dependencyMap) {
+        var node = dependencyMap[key];
+        if (node.filter) {
+            continue;
+        }
+        var matched = false;
+        processors.forEach(function (processor, index) {
+            if (matched) {
+                return;
             }
             if (processor.filter
                 && processor.filter(node, dependencyMap, reverseDependencyMap)
             ) {
-                break;
+                matched = true;
             }
-            else if (processor.is(node, dependencyMap, reverseDependencyMap)) {
-                tasks.push([node, processor]);
-            }
-        }
-    });
+            else if (processor.is
+                && processor.is(node, dependencyMap, reverseDependencyMap)
+                && processor.build
+            ) {
+                matched = true;
 
-    var promises = [ ];
+                node.buildContent = function () {
+                    return processor.build(this, dependencyMap, reverseDependencyMap);
+                };
+                node.onBuildStart = function () {
+                    console.log('正在编译：' + this.file);
+                    this.prevContent = this.content;
+                };
+                node.onBuildEnd = function () {
 
-    var fileChanges = { };
-    var addFileChange = function (file) {
-        var newFile = config.getOutputFile(file);
-        if (file !== newFile) {
-            fileChanges[file] = newFile;
-        }
-    };
-
-    tasks.forEach(function (task) {
-        var node = task[0];
-        var processor = task[1];
-
-        console.log('正在编译：' + node.file);
-
-        var oldContent = node.content;
-        var promise = processor.build(node, dependencyMap, reverseDependencyMap);
-
-        var buildComplete = function () {
-            addFileChange(node.file);
-            if (node.content !== oldContent) {
-                // build 完之后内容不一样，需要更新依赖
-                node.children.length = 0;
-                config.walkNode(node, function (dependency, node) {
-                    var file = dependency.file;
-                    var child = dependencyMap[file];
-                    if (child) {
-                        addFileChange(file);
-                        feTree.addChild(node, child, dependency.async);
+                    var file = this.file;
+                    var newFile = config.getOutputFile(file);
+                    if (file !== newFile) {
+                        fileChanges[file] = newFile;
                     }
-                });
-            }
-        };
 
-        if (promise && promise.then) {
-            promises.push(promise);
-            promise.then(buildComplete);
-        }
-        else {
-            buildComplete();
-        }
-    });
+                    if (this.content !== this.prevContent) {
+                        // build 完之后内容不一样，需要更新依赖
+                        this.children.length = 0;
+                        config.walkNode(this, function (dependency, node) {
+                            var file = dependency.file;
+                            var child = dependencyMap[file];
+                            if (child) {
+                                feTree.addChild(node, child, dependency.async);
+                            }
+                        });
+                    }
+                };
+                nodes.push(node);
+            }
+        });
+    }
 
     return new Promise(function (resolve) {
-        var complete = function () {
-            for (var key in fileChanges) {
-                feTree.updateFile(fileChanges[key], key);
+
+        var promises = nodes.map(
+            function (node) {
+                return node.build();
             }
-            benchmark();
-            resolve();
-        };
-        if (promises.length) {
-            Promise
-            .all(promises)
-            .then(complete);
-        }
-        else {
-            complete();
-        }
+        );
+
+        Promise.all(promises).then(
+            function () {
+                for (var key in fileChanges) {
+                    feTree.updateFile(fileChanges[key], key);
+                }
+                benchmark();
+                resolve();
+            }
+        );
+
     });
 
 }
@@ -258,6 +254,7 @@ function updateReference() {
 
 // md5 化整个项目
 function cleanCache() {
+    //feTree.debug = true;
     var benchmark = feTreeUtil.benchmark('添加 md5 耗时：');
     var dependencyMap = feTree.dependencyMap;
 

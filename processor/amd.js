@@ -29,11 +29,19 @@ exports.is = function (node) {
 var tplSuffix = '_html';
 var styleSuffix = '_css';
 
-function tplReader(node) {
+function fileReader(node, suffix) {
 
-    var amdConfig = config.sourceAmdConfig;
-    var resourceId = filePathToResourceId(node.file, amdConfig)[0];
+    var sourceFile = node.file;
+    var resourceId = filePathToResourceId(sourceFile, config.sourceAmdConfig)[0];
     resourceId = feTreeUtil.removeExtname(resourceId);
+
+    var moduleId = resourceId + suffix;
+    var outputFile = resourceIdToFilePath(moduleId, config.outputAmdConfig);
+
+    var dependencyNode = feTree.dependencyMap[outputFile];
+    if (dependencyNode) {
+        return dependencyNode.content.toString();
+    }
 
     var code = html2js(
         node.content.toString(),
@@ -42,49 +50,56 @@ function tplReader(node) {
         }
     );
 
-    var moduleId = resourceId + tplSuffix;
     var content = 'define("'
         + moduleId
         + '", [], function () { return ' + code + '});';
 
-    var file = resourceIdToFilePath(moduleId, amdConfig);
+    node = new Node(outputFile, new Buffer(content));
+    node.buildContent = true;
 
-    feTree.dependencyMap[file] = new Node(file, new Buffer(content));
+    feTree.dependencyMap[outputFile] = node;
+
+    //console.log('create node', outputFile)
 
     return content;
 
 }
 
+function tplReader(node) {
+    return fileReader(node, tplSuffix);
+}
+
 function styleReader(node) {
-
-    var amdConfig = config.sourceAmdConfig;
-    var resourceId = filePathToResourceId(node.file, amdConfig)[0];
-    resourceId = feTreeUtil.removeExtname(resourceId);
-
-    var code = html2js(
-        node.content.toString(),
-        {
-            mode: config.release ? 'compress' : undefined
-        }
-    );
-
-    var moduleId = resourceId + styleSuffix;
-    var content = 'define("'
-        + moduleId
-        + '", [], function () { return ' + code + '});';
-
-    var file = resourceIdToFilePath(moduleId, amdConfig);
-
-    feTree.dependencyMap[file] = new Node(file, new Buffer(content));
-
-    return content;
-
+    return fileReader(node, styleSuffix);
 }
 
 exports.build = function (node, dependencyMap) {
 
     var amdConfig = feTreeUtil.extend({}, config.sourceAmdConfig);
     amdConfig.replaceRequireConfig = config.getOutputAmdConfig;
+    amdConfig.replaceRequireResource = function (resource, absolute) {
+        var raw = resource.id;
+        var extname = path.extname(raw).toLowerCase();
+
+        var isTpl = extname === '.html'
+            || extname === '.tpl'
+
+        var isStyle = extname === '.css'
+            || extname === '.styl'
+            || extname === '.less';
+
+        var loadAsText = resource.plugin === 'text'
+            || resource.plugin === 'html'
+            || resource.plugin === 'tpl';
+
+        if ((isTpl || isStyle) && loadAsText) {
+            return {
+                plugin: '',
+                id: feTreeUtil.removeExtname(raw)
+                    + (isTpl ? tplSuffix : styleSuffix)
+            };
+        }
+    };
     amdConfig.combine = {
         exclude: [
             'echarts',
@@ -142,42 +157,6 @@ exports.build = function (node, dependencyMap) {
         },
     };
 
-    node.walk({
-        htmlRules: config.htmlRules,
-        amdExcludes: config.amdExcludes,
-        amdConfig: config.sourceAmdConfig,
-        processDependency: function (dependency, node) {
-            var dependency = config.processDependency(dependency, node);
-            if (!dependency) {
-                return;
-            }
-            if (dependency.amd) {
-
-                var raw = dependency.raw;
-                var extname = path.extname(raw).toLowerCase();
-
-                var isTpl = extname === '.html'
-                    || extname === '.tpl';
-
-                var isStyle = extname === '.css'
-                    || extname === '.styl'
-                    || extname === '.less';
-
-                var loadAsText = dependency.plugin === 'text'
-                    || dependency.plugin === 'html'
-                    || dependency.plugin === 'tpl';
-
-                if ((isTpl || isStyle) && loadAsText) {
-                    dependency.plugin = '';
-                    dependency.raw = feTreeUtil.removeExtname(raw)
-                        + (isTpl ? tplSuffix : styleSuffix);
-                }
-
-            }
-            return dependency;
-        }
-    });
-
     amdDeploy({
         file: node.file,
         content: node.content.toString(),
@@ -185,6 +164,10 @@ exports.build = function (node, dependencyMap) {
         minify: config.release,
         callback: function (code) {
             node.content = code;
+            if (/\.styl\b/g.test(code)) {
+                console.log('!!!!!!!!!!!!!!!!')
+                console.log(node.file);
+            }
         }
     });
 
