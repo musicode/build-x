@@ -21,7 +21,7 @@ var processors = [
 ];
 
 // 目录级别的 md5
-var directoryMap = { };
+var directoryHash = { };
 
 var counter = config.buildFiles.length;
 
@@ -64,7 +64,7 @@ function compareFile() {
 
     var dependencyMap = feTree.dependencyMap;
 
-    // 排个序，确保顺序不会影响结果
+    // 先排序，确保顺序不会影响结果
     var files = Object.keys(dependencyMap).sort(function (a, b) {
         if (a > b) {
             return 1;
@@ -104,14 +104,14 @@ function compareFile() {
     }
 
     var prevHashMap = feTreeUtil.readJSON(
-        config.directoryMapFile
+        config.directoryHashFile
     );
 
     if (prevHashMap) {
         var compareLevel = config.compareLevel;
         var changes = [ ];
         for (var key in hashMap) {
-            if (key.split(path.sep).length <= compareLevel) {
+            if (key.split(path.sep).length >= compareLevel) {
                 var isChange = hashMap[key] !== prevHashMap[key];
                 fileInDirectory[key].forEach(function (file) {
                     var node = dependencyMap[file];
@@ -139,7 +139,7 @@ function compareFile() {
 
     }
 
-    directoryMap = hashMap;
+    directoryHash = hashMap;
 
     benchmark();
 }
@@ -259,7 +259,18 @@ function cleanCache() {
     var dependencyMap = feTree.dependencyMap;
 
     var files = Object.keys(dependencyMap).filter(function (file) {
-        return file.startsWith(config.outputSrcDir);
+
+        var matched = file.startsWith(config.outputDir);
+
+        if (matched
+            && Array.isArray(config.filterHashFiles)
+            && feTreeUtil.match(file, config.filterHashFiles)
+        ) {
+            matched = false;
+        }
+
+        return matched;
+
     });
 
     feTree.md5({
@@ -269,7 +280,12 @@ function cleanCache() {
         htmlRules: config.htmlRules,
         amdExcludes: config.amdExcludes,
         amdConfig: config.outputAmdConfig,
-        processDependency: config.processDependency
+        processDependency: function (dependency, node) {
+            var dependency = config.processDependency(dependency, node);
+            if (dependency && dependencyMap[dependency.file]) {
+                return dependency;
+            }
+        }
     });
 
     // 修改模板里的引用
@@ -278,15 +294,13 @@ function cleanCache() {
         if (node.file.startsWith(config.outputViewDir)) {
             config.walkNode(node, function (dependency, node) {
                 var dependencyNode = dependencyMap[dependency.file];
-                if (!dependencyNode) {
-                    console.log(dependency, node.file);
-                    return;
+                if (dependencyNode) {
+                    dependency.raw = feTreeUtil.getHashedFile(
+                        dependency.raw,
+                        dependencyNode.calculate()
+                    );
+                    return dependency;
                 }
-                dependency.raw = feTreeUtil.getHashedFile(
-                    dependency.raw,
-                    dependencyNode.calculate()
-                );
-                return dependency;
             });
         }
     }
@@ -304,8 +318,8 @@ function outputFile() {
         }
     }
     feTreeUtil.writeJSON(
-        config.directoryMapFile,
-        directoryMap
+        config.directoryHashFile,
+        directoryHash
     );
     benchmark();
 }

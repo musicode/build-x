@@ -25,16 +25,24 @@ exports.outputSrcDir = outputSrcDir;
 exports.outputViewDir = outputViewDir;
 exports.outputDepDir = outputDepDir;
 
-exports.directoryMapFile = path.join(outputDir, 'directoryMap.json');
+exports.directoryHashFile = path.join(projectDir, 'directoryHash.json');
 exports.release = false;
 
 // 对比目录的深度，最小为 0
-exports.compareLevel = 3;
+exports.compareLevel = 2;
 
 exports.buildFiles = [
     path.join(viewDir, '**/*.*'),
-    path.join(srcDir, '**/*.*'),
+    //path.join(srcDir, '**/*.*'),
     path.join(depDir, '**/*.*'),
+];
+
+// 不添加 md5 的目录文件
+// 默认会给所有静态资源添加 md5
+// 但如果有些目录已经用版本号控制，可跳过
+exports.filterHashFiles = [
+    path.join(outputViewDir, '**/*.*'),
+    path.join(outputDepDir, '**/*.*'),
 ];
 
 var filterFiles = [
@@ -45,7 +53,15 @@ var filterFiles = [
     '**/demo/**/*',
     '**/demo-files/**/*',
     '**/*.as',
-    '**/*.psd'
+    '**/*.fla',
+    '**/*.psd',
+    '**/edp-*',
+    '**/README.md',
+    '**/readme.md',
+    '**/Read Me.txt',
+    '**/package.json',
+    '**/module.conf',
+
 ];
 
 exports.filterFiles = function (files) {

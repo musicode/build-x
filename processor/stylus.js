@@ -36,7 +36,7 @@ exports.filter = function (node, dependencyMap, reverseDependencyMap) {
     }
 };
 
-exports.build = function (node, dependencyMap, reverseDependencyMap) {
+exports.build = function (node) {
     return new Promise(function (resolve, reject) {
         stylus(
             node.content.toString()
