@@ -1,5 +1,7 @@
 
-var minify = require('css-minifiers')['clean-css'];
+var CleanCSS = require('clean-css');
+var cleanCSS = new CleanCSS();
+
 var autoprefixer = require('autoprefixer');
 var postcss = require('postcss');
 
@@ -20,16 +22,13 @@ exports.build = function (node) {
         )
         .then(function (css) {
             if (config.release) {
-                minify(css)
-                .then(
-                    function (output) {
-                        node.content = output;
-                        resolve();
-                    },
-                    function (error) {
-                        console.error(node.file, error);
+                cleanCSS.minify(css, function (error, output) {
+                    if (error) {
+                        console.error(error);
                     }
-                );
+                    node.content = output.styles;
+                    resolve();
+                });
             }
             else {
                 resolve();

@@ -8,6 +8,7 @@ var task = require('./task');
 config.release = (argv.fast || !argv.release) ? false : true;
 config.compareLevel = argv.level ? 2 : 0;
 
+
 var totalBenchmark = feTreeUtil.benchmark('总耗时：');
 
 
