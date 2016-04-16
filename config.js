@@ -10,7 +10,7 @@ var depName = 'dep';
 var outputSrcName = 'asset';
 var outputDepName = 'dep';
 
-var projectDir = '/Users/zhujl/github/marketing'//path.join(__dirname, '..');
+var projectDir = '/Users/zhujl/github/marketing';//path.join(__dirname, '..');
 var srcDir = path.join(projectDir, srcName);
 var depDir = path.join(projectDir, depName);
 
@@ -48,7 +48,7 @@ exports.pageFiles = [
 // 静态资源
 exports.staticFiles = [
     //path.join(srcDir, '**/*.*'),
-    path.join(projectDir, 'dep/**/*.*'),
+    path.join(depDir, '**/*.*'),
 ];
 
 // 给静态资源添加 md5
