@@ -12,12 +12,12 @@ var feTreeUtil = require('fe-tree/lib/util');
 var config = require('../config');
 var script = require('./script');
 
-var extname = {
-    '.js': 1
-};
+exports.extnames = [
+    '.js'
+];
 
 exports.is = function (node) {
-    if (extname[node.extname]) {
+    if (exports.extnames.indexOf(node.extname) >= 0) {
         var amdExcludes = config.amdExcludes;
         if (Array.isArray(amdExcludes)) {
             return !feTreeUtil.match(node.file, amdExcludes);

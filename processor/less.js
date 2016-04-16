@@ -6,9 +6,13 @@ var page = require('./page');
 var html = require('./html');
 var amd = require('./amd');
 
-var extname = {
-    '.less': 1
-};
+exports.extnames = [
+    '.less'
+];
+
+exports.paths = [
+
+];
 
 function isRootStyle(node, dependencyMap, reverseDependencyMap) {
     var files = reverseDependencyMap[node.file];
@@ -24,13 +28,13 @@ function isRootStyle(node, dependencyMap, reverseDependencyMap) {
 }
 
 exports.is = function (node, dependencyMap, reverseDependencyMap) {
-    if (extname[node.extname]) {
+    if (exports.extnames.indexOf(node.extname) >= 0) {
         return isRootStyle(node, dependencyMap, reverseDependencyMap);
     }
 };
 
 exports.filter = function (node, dependencyMap, reverseDependencyMap) {
-    if (extname[node.extname]) {
+    if (exports.extnames.indexOf(node.extname) >= 0) {
         return !isRootStyle(node, dependencyMap, reverseDependencyMap);
     }
 };
@@ -40,6 +44,7 @@ exports.build = function (node) {
         less.render(
             node.content.toString(),
             {
+                paths: exports.paths,
                 filename: node.file,
                 relativeUrls: true,
                 compress: config.release

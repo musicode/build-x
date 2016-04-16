@@ -3,13 +3,13 @@ var feTreeUtil = require('fe-tree/lib/util');
 var config = require('../config');
 var html = require('./html');
 
-var extname = {
-    '.html': 1,
-    '.phtml': 1,
-};
+exports.extnames = [
+    '.html',
+    '.phtml'
+];
 
 exports.is = function (node) {
-    if (extname[node.extname]) {
+    if (exports.extnames.indexOf(node.extname) >= 0) {
         return feTreeUtil.match(node.file, config.pageFiles);
     }
 };

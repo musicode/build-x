@@ -1,5 +1,4 @@
 var stylus = require('stylus');
-var path = require('path');
 
 var config = require('../config');
 var page = require('./page');
@@ -7,9 +6,14 @@ var html = require('./html');
 var css = require('./css');
 var amd = require('./amd');
 
-var extname = {
-    '.styl': 1
-};
+exports.extnames = [
+    '.styl'
+];
+
+exports.paths = [
+    config.projectDir,
+    config.srcDir,
+];
 
 function isRootStyle(node, dependencyMap, reverseDependencyMap) {
     var files = reverseDependencyMap[node.file];
@@ -25,13 +29,13 @@ function isRootStyle(node, dependencyMap, reverseDependencyMap) {
 }
 
 exports.is = function (node, dependencyMap, reverseDependencyMap) {
-    if (extname[node.extname]) {
+    if (exports.extnames.indexOf(node.extname) >= 0) {
         return isRootStyle(node, dependencyMap, reverseDependencyMap);
     }
 };
 
 exports.filter = function (node, dependencyMap, reverseDependencyMap) {
-    if (extname[node.extname]) {
+    if (exports.extnames.indexOf(node.extname) >= 0) {
         return !isRootStyle(node, dependencyMap, reverseDependencyMap);
     }
 };
@@ -41,6 +45,7 @@ exports.build = function (node) {
         stylus(
             node.content.toString()
         )
+        .set('paths', exports.paths)
         .set('filename', node.file)
         .set('compress', config.release)
         .define('url', stylus.resolver({

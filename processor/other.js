@@ -1,3 +1,6 @@
+
+exports.extnames = [ ];
+
 exports.is = function (node) {
     return true;
 };

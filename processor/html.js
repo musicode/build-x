@@ -2,13 +2,13 @@ var readRequireConfig = require('amd-deploy/lib/readRequireConfig');
 var config = require('../config');
 var page = require('./page');
 
-var extname = {
-    '.html': 1,
-    '.tpl': 1
-};
+exports.extnames = [
+    '.html',
+    '.tpl'
+];
 
 exports.is = function (node) {
-    if (extname[node.extname]) {
+    if (exports.extnames.indexOf(node.extname) >= 0) {
         return !page.is(node);
     }
 };

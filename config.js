@@ -5,18 +5,25 @@ var feTreeRule = require('fe-tree/lib/rule');
 var feTreeUtil = require('fe-tree/lib/util');
 
 var srcName = 'src';
+var depName = 'dep';
 var outputSrcName = 'asset';
+var outputDepName = 'dep';
 
 var projectDir = '/Users/zhujl/github/marketing'//path.join(__dirname, '..');
 var srcDir = path.join(projectDir, srcName);
+var depDir = path.join(projectDir, depName);
 
 var outputDir = path.join(projectDir, 'output');
 var outputSrcDir = path.join(outputDir, outputSrcName);
+var outputDepDir = path.join(outputDir, outputDepName);
 
 exports.projectDir = projectDir;
 exports.outputDir = outputDir;
+exports.srcDir = srcDir;
 
 exports.directoryHashFile = null;
+
+exports.total = false;
 exports.release = false;
 
 // 对比目录的深度，最小为 0
@@ -97,38 +104,59 @@ var sourcePrefix2Dir = {
     '{{ $static_origin }}/': projectDir,
     '/src/': srcDir,
     'src/': srcDir,
+    '/dep/': depDir,
+    'dep/': depDir,
 };
 
 var outputPrefix2Dir = {
     '{{ $static_origin }}/': outputDir,
     '/asset/': outputSrcDir,
     'asset/': outputSrcDir,
+    '/dep/': outputDepDir,
+    'dep/': outputDepDir,
 };
-
-function getDependencyFile(dependency, node) {
-    var raw = dependency.raw;
-    var file = dependency.file;
-    if (node.extname === '.styl'
-        && /^[a-z]/i.test(raw)
-    ) {
-        var suffix = dependency.extname || '';
-        var testFiles = [
-            path.join(projectDir, raw) + suffix,
-            path.join(projectDir, 'src', raw) + suffix
-        ];
-        for (var i = 0, len = testFiles.length; i < len; i++) {
-            if (fs.existsSync(testFiles[i])) {
-                file = testFiles[i];
-                break;
-            }
-        }
-    }
-    return file;
-}
 
 var amdPlugins = [
     'jquery', 'html', 'text', 'tpl', 'css', 'js'
 ];
+
+function getDependencyFile(dependency, node) {
+
+    var raw = dependency.raw;
+    var file = dependency.file;
+
+    [
+        require('./processor/less'),
+        require('./processor/stylus')
+    ]
+    .forEach(function (processor, index) {
+
+        var paths = processor.paths;
+
+        if (!file
+            && /^[a-z]/i.test(raw)
+            && Array.isArray(paths)
+            && paths.length > 0
+            && processor.extnames.indexOf(node.extname) >= 0
+        ) {
+
+            var suffix = dependency.extname || '';
+
+            paths
+            .map(function (dir) {
+                return path.join(dir, raw) + suffix;
+            })
+            .forEach(function (item) {
+                if (!file && fs.existsSync(item)) {
+                    file = item;
+                }
+            });
+
+        }
+    });
+
+    return file;
+}
 
 // 不需要按 amd 处理的文件
 // 不解析语法树不知道是否是 AMD 模块，因此通过配置分辨
@@ -245,7 +273,7 @@ exports.sourceAmdConfig = {
         },
         {
             name: 'moment',
-            location: '../dep/moment/2.7.0/src',
+            location: '../dep/moment/2.10.6/src',
             main: 'moment'
         },
         {
@@ -275,12 +303,12 @@ exports.sourceAmdConfig = {
         },
         {
             name: 'cc',
-            location: '../dep/cc/1.0.0/src',
+            location: '../dep/cc/1.0.2/src',
             main: 'main'
         },
         {
             name: 'custom',
-            location: '../dep/cc/1.0.0/custom'
+            location: '../dep/cc/1.0.2/custom'
         },
         {
             name: 'SwfStore',

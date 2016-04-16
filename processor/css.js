@@ -7,12 +7,12 @@ var postcss = require('postcss');
 
 var config = require('../config');
 
-var extname = {
-    '.css': 1
-};
+exports.extnames = [
+    '.css'
+];
 
 exports.is = function (node) {
-    return extname[node.extname];
+    return exports.extnames.indexOf(node.extname) >= 0;
 };
 
 exports.build = function (node) {

@@ -6,10 +6,14 @@ var feTreeUtil = require('fe-tree/lib/util');
 var config = require('./config');
 var task = require('./task');
 
+// 是否压缩（较慢）
 config.release = (argv.fast || !argv.release) ? false : true;
-config.compareLevel = argv.compareLevel ? 2 : 0;
+// 是否全量 build
+config.total = argv.total ? true : false;
+// 对比文件的目录深度
+config.compareLevel = argv.compareLevel || 0;
+// 目录 hash 文件存放位置，便于下次 build 进行对比
 config.hashFile = argv.hashFile || path.join(config.projectDir, 'hash.json')
-
 
 var totalBenchmark = feTreeUtil.benchmark('总耗时：');
 

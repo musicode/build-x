@@ -1,12 +1,12 @@
 var uglify = require('uglifyjs').minify;
 var config = require('../config');
 
-var extname = [
+exports.extnames = [
     '.js'
 ];
 
 exports.is = function (node) {
-    return extname[node.extname];
+    return exports.extnames.indexOf(node.extname) >= 0;
 };
 
 exports.build = function (node) {

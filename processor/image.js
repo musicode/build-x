@@ -1,13 +1,14 @@
-var extname = {
-    '.jpg': 1,
-    '.jpeg': 1,
-    '.png': 1,
-    '.gif': 1,
-    '.ico': 1
-};
+
+exports.extnames = [
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.gif',
+    '.ico'
+];
 
 exports.is = function (node) {
-    return extname[node.extname];
+    return exports.extnames.indexOf(node.extname) >= 0;
 };
 
 exports.build = function (node, map) {

@@ -102,39 +102,42 @@ exports.compareFile = function () {
         );
     }
 
-    var prevHashMap = feTreeUtil.readJSON(
-        config.hashFile
-    );
+    if (!config.total) {
 
-    if (prevHashMap) {
-        var compareLevel = config.compareLevel;
-        var changes = [ ];
-        for (var key in hashMap) {
-            if (key.split(path.sep).length >= compareLevel) {
-                var isChange = hashMap[key] !== prevHashMap[key];
-                fileInDirectory[key].forEach(function (file) {
-                    var node = dependencyMap[file];
-                    node.filter = !isChange;
-                    if (isChange) {
-                        changes.push(file);
+        var prevHashMap = feTreeUtil.readJSON(
+            config.hashFile
+        );
+
+        if (prevHashMap) {
+            var compareLevel = config.compareLevel || 0;
+            var changes = [ ];
+            for (var key in hashMap) {
+                if (key.split(path.sep).length >= compareLevel) {
+                    var isChange = hashMap[key] !== prevHashMap[key];
+                    fileInDirectory[key].forEach(function (file) {
+                        var node = dependencyMap[file];
+                        node.filter = !isChange;
+                        if (isChange) {
+                            changes.push(file);
+                        }
+                    });
+                }
+            }
+
+            // 变化的文件会导致父文件变化
+            var reverseDependencyMap = feTree.reverseDependencyMap;
+            var updateChange = function (changes) {
+                changes.forEach(function (file) {
+                    dependencyMap[file].filter = false;
+                    var changes = reverseDependencyMap[file];
+                    if (changes) {
+                        updateChange(changes);
                     }
                 });
-            }
+            };
+
+            updateChange(changes);
         }
-
-        // 变化的文件会导致父文件变化
-        var reverseDependencyMap = feTree.reverseDependencyMap;
-        var updateChange = function (changes) {
-            changes.forEach(function (file) {
-                dependencyMap[file].filter = false;
-                var changes = reverseDependencyMap[file];
-                if (changes) {
-                    updateChange(changes);
-                }
-            });
-        };
-
-        updateChange(changes);
 
     }
 
@@ -173,6 +176,7 @@ exports.buildFile = function () {
             if (matched) {
                 return;
             }
+
             if (processor.filter
                 && processor.filter(node, dependencyMap, reverseDependencyMap)
             ) {
@@ -215,11 +219,11 @@ exports.buildFile = function () {
                 nodes.push(node);
 
                 // 归类
-                var nodes = processor.nodes;
-                if (!Array.isArray(nodes)) {
-                    nodes = processor.nodes = [ ];
+                var processorNodes = processor.nodes;
+                if (!Array.isArray(processorNodes)) {
+                    processorNodes = processor.nodes = [ ];
                 }
-                nodes.push(node);
+                processorNodes.push(node);
 
             }
         });
@@ -327,6 +331,7 @@ exports.outputFile = function () {
     for (var key in dependencyMap) {
         var node = dependencyMap[key];
         if (node.file.startsWith(config.outputDir)) {
+            console.log('输出文件', node.file);
             fs.createFileSync(node.file, node.content);
         }
     }
