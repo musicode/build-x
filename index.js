@@ -10,8 +10,6 @@ var task = require('./task');
 config.release = (argv.fast || !argv.release) ? false : true;
 // 是否全量 build
 config.total = argv.total ? true : false;
-// 对比文件的目录深度
-config.compareLevel = argv.compareLevel || 0;
 // 目录 hash 文件存放位置，便于下次 build 进行对比
 config.hashFile = argv.hashFile || path.join(config.projectDir, 'hash.json')
 

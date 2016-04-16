@@ -80,20 +80,14 @@ exports.compareFile = function () {
             config.projectDir,
             path.dirname(file)
         );
-        var terms = dirname.split(path.sep);
-        var paths = [];
-        for (var i = 0, len = terms.length; i < len; i++) {
-            paths.push(terms[i]);
-            dirname = paths.join(path.sep);
-            if (!hashMap[dirname]) {
-                hashMap[dirname] = '';
-            }
-            if (!fileInDirectory[dirname]) {
-                fileInDirectory[dirname] = [];
-            }
-            hashMap[dirname] += node.md5;
-            fileInDirectory[dirname].push(file);
+        if (!hashMap[dirname]) {
+            hashMap[dirname] = '';
         }
+        hashMap[dirname] += node.md5;
+        if (!fileInDirectory[dirname]) {
+            fileInDirectory[dirname] = [ ];
+        }
+        fileInDirectory[dirname].push(file);
     });
 
     for (var key in hashMap) {
@@ -109,19 +103,16 @@ exports.compareFile = function () {
         );
 
         if (prevHashMap) {
-            var compareLevel = config.compareLevel || 0;
             var changes = [ ];
             for (var key in hashMap) {
-                if (key.split(path.sep).length >= compareLevel) {
-                    var isChange = hashMap[key] !== prevHashMap[key];
-                    fileInDirectory[key].forEach(function (file) {
-                        var node = dependencyMap[file];
-                        node.filter = !isChange;
-                        if (isChange) {
-                            changes.push(file);
-                        }
-                    });
-                }
+                var isChange = hashMap[key] !== prevHashMap[key];
+                fileInDirectory[key].forEach(function (file) {
+                    var node = dependencyMap[file];
+                    node.filter = !isChange;
+                    if (isChange && changes.indexOf(file) < 0) {
+                        changes.push(file);
+                    }
+                });
             }
 
             // 变化的文件会导致父文件变化

@@ -10,7 +10,7 @@ var depName = 'dep';
 var outputSrcName = 'asset';
 var outputDepName = 'dep';
 
-var projectDir = '/Users/zhujl/github/marketing';//path.join(__dirname, '..');
+var projectDir = '/Users/zhujl/github/web-fe';//path.join(__dirname, '..');
 var srcDir = path.join(projectDir, srcName);
 var depDir = path.join(projectDir, depName);
 
@@ -26,9 +26,6 @@ exports.directoryHashFile = null;
 
 exports.total = false;
 exports.release = false;
-
-// 对比目录的深度，最小为 0
-exports.compareLevel = 2;
 
 // 页面文件，比如 smarty 模板、或 index.html、main.html、app.html 等
 exports.pageFiles = [
@@ -277,7 +274,7 @@ exports.sourceAmdConfig = {
         },
         {
             name: 'moment',
-            location: '../dep/moment/2.10.6/src',
+            location: '../dep/moment/2.7.0/src',
             main: 'moment'
         },
         {
@@ -307,12 +304,12 @@ exports.sourceAmdConfig = {
         },
         {
             name: 'cc',
-            location: '../dep/cc/1.0.2/src',
+            location: '../dep/cc/1.0.0/src',
             main: 'main'
         },
         {
             name: 'custom',
-            location: '../dep/cc/1.0.2/custom'
+            location: '../dep/cc/1.0.0/custom'
         },
         {
             name: 'SwfStore',
