@@ -18,8 +18,11 @@ var htmlProcessor = require('./processor/html');
 var pageProcessor = require('./processor/page');
 var otherProcessor = require('./processor/other');
 
-// 目录级别的 md5
-var directoryHash = { };
+// 所有文件的 md5
+var fileHash = { };
+
+// 已经输出过的文件
+var outputedFile = { };
 
 // 生成源文件的树
 exports.parseSourceTree = function () {
@@ -53,47 +56,16 @@ exports.parseSourceTree = function () {
 
     });
 
-}
+};
 
 // 对比文件变化
 exports.compareFile = function () {
 
-    var hashMap = { };
-    var fileInDirectory = { };
-
     var dependencyMap = feTree.dependencyMap;
 
-    // 先排序，确保顺序不会影响结果
-    var files = Object.keys(dependencyMap).sort(function (a, b) {
-        if (a > b) {
-            return 1;
-        }
-        else if (a < b) {
-            return -1;
-        }
-        return 0;
-    });
-
-    files.forEach(function (file) {
-        var node = dependencyMap[file];
-        var dirname = path.relative(
-            config.projectDir,
-            path.dirname(file)
-        );
-        if (!hashMap[dirname]) {
-            hashMap[dirname] = '';
-        }
-        hashMap[dirname] += node.md5;
-        if (!fileInDirectory[dirname]) {
-            fileInDirectory[dirname] = [ ];
-        }
-        fileInDirectory[dirname].push(file);
-    });
-
-    for (var key in hashMap) {
-        hashMap[key] = feTreeUtil.md5(
-            new Buffer(hashMap[key])
-        );
+    var hashMap = { };
+    for (var key in dependencyMap) {
+        hashMap[key] = dependencyMap[key].md5;
     }
 
     if (!config.total) {
@@ -103,24 +75,23 @@ exports.compareFile = function () {
         );
 
         if (prevHashMap) {
+
             var changes = [ ];
+
             for (var key in hashMap) {
                 var isChange = hashMap[key] !== prevHashMap[key];
-                fileInDirectory[key].forEach(function (file) {
-                    var node = dependencyMap[file];
-                    node.filter = !isChange;
-                    if (isChange && changes.indexOf(file) < 0) {
-                        changes.push(file);
-                    }
-                });
+                if (isChange) {
+                    changes.push(key);
+                }
+                else {
+                    node.filter = true;
+                }
             }
 
-            // 变化的文件会导致父文件变化
-            var reverseDependencyMap = feTree.reverseDependencyMap;
             var updateChange = function (changes) {
                 changes.forEach(function (file) {
                     dependencyMap[file].filter = false;
-                    var changes = reverseDependencyMap[file];
+                    var changes = feTree.reverseDependencyMap[file];
                     if (changes) {
                         updateChange(changes);
                     }
@@ -132,9 +103,9 @@ exports.compareFile = function () {
 
     }
 
-    directoryHash = hashMap;
+    fileHash = hashMap;
 
-}
+};
 
 // 把文件编译成浏览器可执行的版本
 exports.buildFile = function () {
@@ -239,7 +210,7 @@ exports.buildFile = function () {
 
     });
 
-}
+};
 
 // 替换所有需要输出的文件的引用
 // 这个版本是可以上线的，只是会有缓存问题
@@ -257,47 +228,32 @@ exports.updateReference = function () {
         }
     }
 
-}
+};
 
 // md5 化整个项目
 exports.cleanCache = function () {
-    //feTree.debug = true;
 
     var dependencyMap = feTree.dependencyMap;
 
-    var files = Object.keys(dependencyMap).filter(function (file) {
-
-        var matched = false;
-
+    for (var key in dependencyMap) {
+        var node = dependencyMap[key];
         if (Array.isArray(config.hashFiles)
-            && feTreeUtil.match(file, config.hashFiles)
+            && feTreeUtil.match(key, config.hashFiles)
         ) {
-            matched = true;
+            feTreeUtil.updateFile(
+                feTreeUtil.getHashedFile(
+                    key,
+                    node.calculate()
+                ),
+                key
+            );
         }
-
-        return matched;
-
-    });
-
-    feTree.md5({
-        nodes: files.map(function (file) {
-            return dependencyMap[file];
-        }),
-        htmlRules: config.htmlRules,
-        amdExcludes: config.amdExcludes,
-        amdConfig: config.outputAmdConfig,
-        processDependency: function (dependency, node) {
-            var dependency = config.processDependency(dependency, node);
-            if (dependency && dependencyMap[dependency.file]) {
-                return dependency;
-            }
-        }
-    });
+    }
 
     // 修改模板里的引用
-    var pageNodes = pageProcessor.nodes;
-    if (Array.isArray(pageNodes)) {
-        pageNodes.forEach(function (node) {
+    var nodes = pageProcessor.nodes;
+    if (Array.isArray(nodes)) {
+        nodes.forEach(function (node) {
             config.walkNode(node, function (dependency, node) {
                 var dependencyNode = dependencyMap[dependency.file];
                 if (dependencyNode) {
@@ -311,22 +267,32 @@ exports.cleanCache = function () {
         });
     }
 
-}
+};
 
 exports.outputFile = function () {
 
     var dependencyMap = feTree.dependencyMap;
     for (var key in dependencyMap) {
         var node = dependencyMap[key];
-        if (node.file.startsWith(config.outputDir)) {
-            console.log('输出文件', node.file);
-            fs.createFileSync(node.file, node.content);
+        var file = node.file;
+        var md5 = node.md5;
+        if (outputedFile[file] !== md5
+            && file.startsWith(config.outputDir)
+        ) {
+            console.log('输出文件', file);
+            outputedFile[file] = md5;
+            fs.createFileSync(file, node.content);
         }
     }
 
+};
+
+exports.complete = function () {
+
     feTreeUtil.writeJSON(
         config.hashFile,
-        directoryHash
+        fileHash
     );
 
-}
+};
+

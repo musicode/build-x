@@ -22,7 +22,8 @@ exports.projectDir = projectDir;
 exports.outputDir = outputDir;
 exports.srcDir = srcDir;
 
-exports.directoryHashFile = null;
+// 文件 md5 的存储路径
+exports.hashFile = null;
 
 exports.total = false;
 exports.release = false;
