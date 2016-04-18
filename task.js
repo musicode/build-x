@@ -84,7 +84,7 @@ exports.compareFile = function () {
                     changes.push(key);
                 }
                 else {
-                    node.filter = true;
+                    dependencyMap[key].filter = true;
                 }
             }
 
@@ -233,14 +233,16 @@ exports.updateReference = function () {
 // md5 化整个项目
 exports.cleanCache = function () {
 
-    var dependencyMap = feTree.dependencyMap;
+    var hashNodes = [ ];
 
+    var dependencyMap = feTree.dependencyMap;
     for (var key in dependencyMap) {
         var node = dependencyMap[key];
         if (Array.isArray(config.hashFiles)
             && feTreeUtil.match(key, config.hashFiles)
         ) {
-            feTreeUtil.updateFile(
+            hashNodes.push(node);
+            feTree.updateFile(
                 feTreeUtil.getHashedFile(
                     key,
                     node.calculate()
@@ -251,9 +253,9 @@ exports.cleanCache = function () {
     }
 
     // 修改模板里的引用
-    var nodes = pageProcessor.nodes;
-    if (Array.isArray(nodes)) {
-        nodes.forEach(function (node) {
+    var pageNodes = pageProcessor.nodes;
+    if (hashNodes.length > 0 && Array.isArray(pageNodes)) {
+        pageNodes.forEach(function (node) {
             config.walkNode(node, function (dependency, node) {
                 var dependencyNode = dependencyMap[dependency.file];
                 if (dependencyNode) {

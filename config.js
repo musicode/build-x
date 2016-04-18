@@ -10,7 +10,7 @@ var depName = 'dep';
 var outputSrcName = 'asset';
 var outputDepName = 'dep';
 
-var projectDir = '/Users/zhujl/github/web-fe';//path.join(__dirname, '..');
+var projectDir = path.join(__dirname, '..');
 var srcDir = path.join(projectDir, srcName);
 var depDir = path.join(projectDir, depName);
 
@@ -31,21 +31,13 @@ exports.release = false;
 // 页面文件，比如 smarty 模板、或 index.html、main.html、app.html 等
 exports.pageFiles = [
     path.join(projectDir, 'view/**/*.*'),
-    path.join(projectDir, 'add.html'),
-    path.join(projectDir, 'list.html'),
-    path.join(projectDir, 'couponAdd.html'),
-    path.join(projectDir, 'couponDetail.html'),
-    path.join(projectDir, 'couponGrant.html'),
-    path.join(projectDir, 'couponList.html'),
-    path.join(projectDir, 'couponSend.html'),
-    path.join(projectDir, 'delegate.html'),
-    path.join(projectDir, 'coupon-m/*.html'),
-    path.join(projectDir, 'discount-m/*.html')
 ];
 
 // 静态资源
 exports.staticFiles = [
-    //path.join(srcDir, '**/*.*'),
+    // src 会自动分析依赖
+    // path.join(srcDir, '**/*.*'),
+    // 加上 dep 是怕有第三方用了其中的文件
     path.join(depDir, '**/*.*'),
 ];
 
@@ -70,7 +62,6 @@ var filterFiles = [
     '**/Read Me.txt',
     '**/package.json',
     '**/module.conf',
-
 ];
 
 exports.filterFiles = function (files) {
