@@ -170,7 +170,7 @@ exports.htmlRules = [
         match: function (result, file, amdConfig) {
             var terms = result.substring(3, result.length - 3).split('=');
             var id = terms[1].trim();
-            if (id.startsWith('$')) {
+            if (id.indexOf('$') === 0) {
                 return;
             }
             return feTreeRule.parseAmdDependencies(
@@ -188,11 +188,11 @@ var extnameMap = {
 
 exports.getOutputFile = function (file) {
 
-    if (file.startsWith(outputDir)) {
+    if (file.indexOf(outputDir) === 0) {
         return file;
     }
 
-    if (file.startsWith(projectDir)) {
+    if (file.indexOf(projectDir) === 0) {
         var relativePath = path.relative(projectDir, file);
         file = path.join(outputDir, relativePath);
     }
@@ -332,7 +332,7 @@ exports.processDependency = function (dependency, node) {
             feTreeUtil.extend(prefix2Dir, commonPrefix2Dir);
         }
 
-        var specifiedPrefix2Dir = node.file.startsWith(outputDir)
+        var specifiedPrefix2Dir = node.file.indexOf(outputDir) === 0
             ? outputPrefix2Dir
             : sourcePrefix2Dir;
 
@@ -418,7 +418,7 @@ exports.walkNode = function (node, processDependency) {
         htmlRules: exports.htmlRules,
         cssRules: exports.cssRules,
         amdExcludes: exports.amdExcludes,
-        amdConfig: node.file.startsWith(outputDir)
+        amdConfig: node.file.indexOf(outputDir) === 0
             ? exports.outputAmdConfig
             : exports.sourceAmdConfig,
         processDependency: function (dependency, node) {

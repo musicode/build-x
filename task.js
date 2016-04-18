@@ -220,7 +220,7 @@ exports.updateReference = function () {
 
     for (var key in dependencyMap) {
         var node = dependencyMap[key];
-        if (node.file.startsWith(config.outputDir)) {
+        if (node.file.indexOf(config.outputDir) === 0) {
             config.walkNode(node, function (dependency, node) {
                 dependency.raw = config.getOutputFile(dependency.raw);
                 return dependency;
@@ -279,7 +279,7 @@ exports.outputFile = function () {
         var file = node.file;
         var md5 = node.md5;
         if (outputedFile[file] !== md5
-            && file.startsWith(config.outputDir)
+            && file.indexOf(config.outputDir) === 0
         ) {
             console.log('输出文件', file);
             outputedFile[file] = md5;
