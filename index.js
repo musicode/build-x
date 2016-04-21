@@ -47,18 +47,21 @@ task.parseSourceTree()
 
 
         benchmark = feTreeUtil.benchmark('添加 md5 耗时：');
-        task.cleanCache();
-        benchmark();
+        task.cleanCache()
+        .then(function () {
+            benchmark();
 
 
-        benchmark = feTreeUtil.benchmark('写文件耗时：');
-        task.outputFile();
-        benchmark();
+            benchmark = feTreeUtil.benchmark('写文件耗时：');
+            task.outputFile();
+            benchmark();
 
 
-        task.complete();
+            task.complete();
 
 
-        totalBenchmark();
+            totalBenchmark();
+        });
+
     });
 });

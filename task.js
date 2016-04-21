@@ -236,11 +236,8 @@ exports.cleanCache = function () {
     // 需要替换依赖引用的节点
     var rootFileMap = { };
 
-    // 改变 md5 化的节点
+    // 需要 md5 化的节点
     var hashFileMap = { };
-
-    // 文件的 md5
-    var hashMap = { };
 
     var dependencyMap = feTree.dependencyMap;
     for (var key in dependencyMap) {
@@ -259,38 +256,108 @@ exports.cleanCache = function () {
         });
     }
 
+    var buildNodes = [ ];
+
+    var buildDependency = function (dependency, node, different, same) {
+        var file = dependency.file;
+        var dependencyNode = hashFileMap[file];
+        if (dependencyNode) {
+            if (file !== node.file) {
+                return different && different(dependency, dependencyNode);
+            }
+            else {
+                return same && same(dependency, dependencyNode);
+            }
+        }
+    };
+
+    var hashMap = { };
     var getNodeHash = function (node) {
         var hash = hashMap[node.file];
         if (!hash) {
-            hash =
-            hashMap[node.file] = node.calculate();
+            hash = hashMap[node.file] = node.md5;
         }
         return hash;
     };
 
+    var fileChanges = { };
+
+    var updateDependency = function (dependency, dependencyNode) {
+        dependency.raw = feTreeUtil.getHashedFile(
+            dependency.raw,
+            getNodeHash(dependencyNode)
+        );
+        fileChanges[dependencyNode.file] = feTreeUtil.getHashedFile(
+            dependencyNode.file,
+            getNodeHash(dependencyNode)
+        );
+        return dependency;
+    };
+
+
+
     for (var key in rootFileMap) {
-        config.walkNode(rootFileMap[key], function (dependency, node) {
-            var file = dependency.file;
-            var dependencyNode = hashFileMap[file];
-            if (dependencyNode) {
-                dependency.raw = feTreeUtil.getHashedFile(
-                    dependency.raw,
-                    getNodeHash(dependencyNode)
-                );
-                return dependency;
-            }
-        });
+        var node = rootFileMap[key];
+        node.onBuildStart = node.onBuildEnd = null;
+        node.buildContent = function () {
+            var node = this;
+            return new Promise(function (resolve) {
+                var promises = [ ];
+                config.walkNode(node, function (dependency, node) {
+                    return buildDependency(
+                        dependency,
+                        node,
+                        updateDependency,
+                        function (dependency, dependencyNode) {
+                            promises.push(
+                                new Promise(function (resolve) {
+                                    config.walkNode(node, function (dependency, node) {
+                                        return buildDependency(
+                                            dependency,
+                                            node,
+                                            null,
+                                            updateDependency
+                                        );
+                                    });
+                                    resolve();
+                                })
+                            );
+                        }
+                    );
+                });
+
+                if (promises.length > 0) {
+                    Promise.all(promises)
+                    .then(resolve);
+                }
+                else {
+                    resolve();
+                }
+
+            });
+        };
+        buildNodes.push(node);
     }
 
-    for (var key in hashFileMap) {
-        feTree.updateFile(
-            feTreeUtil.getHashedFile(
-                key,
-                getNodeHash(hashFileMap[key])
-            ),
-            key
+    return new Promise(function (resolve) {
+
+        var promises = buildNodes.map(
+            function (node) {
+                return node.build();
+            }
         );
-    }
+
+        Promise.all(promises)
+        .then(function () {
+            for (var key in fileChanges) {
+                feTree.updateFile(
+                    fileChanges[key],
+                    key
+                );
+            }
+            resolve();
+        });
+    });
 
 };
 
