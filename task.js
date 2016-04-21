@@ -233,49 +233,58 @@ exports.updateReference = function () {
 // md5 化整个项目
 exports.cleanCache = function () {
 
-    var hashNodes = { };
+    // 需要替换依赖引用的节点
+    var rootFileMap = { };
+
+    // 改变 md5 化的节点
+    var hashFileMap = { };
+
+    // 文件的 md5
+    var hashMap = { };
 
     var dependencyMap = feTree.dependencyMap;
     for (var key in dependencyMap) {
         if (Array.isArray(config.hashFiles)
             && feTreeUtil.match(key, config.hashFiles)
         ) {
-            hashNodes[key] = dependencyMap[key];
+            rootFileMap[key] =
+            hashFileMap[key] = dependencyMap[key];
         }
     }
 
-    var hashNodeKeys = Object.keys(hashNodes);
-
-    // 修改模板里的引用
     var pageNodes = pageProcessor.nodes;
-    if (hashNodeKeys.length > 0 && Array.isArray(pageNodes)) {
+    if (Array.isArray(pageNodes) && pageNodes.length > 0) {
         pageNodes.forEach(function (node) {
-            config.walkNode(node, function (dependency, node) {
-                var dependencyNode = hashNodes[dependency.file];
-                if (dependencyNode) {
-                    dependency.raw = feTreeUtil.getHashedFile(
-                        dependency.raw,
-                        dependencyNode.calculate()
-                    );
-                    return dependency;
-                }
-            });
+            rootFileMap[node.file] = node;
         });
     }
 
 
-    hashNodeKeys.forEach(
-        function (file) {
-            var node = hashNodes[file];
-            feTree.updateFile(
-                feTreeUtil.getHashedFile(
-                    file,
-                    node.calculate()
-                ),
-                file
-            );
-        }
-    );
+    for (var key in rootFileMap) {
+        config.walkNode(rootFileMap[key], function (dependency, node) {
+            var file = dependency.file;
+            var dependencyNode = hashFileMap[file];
+            if (dependencyNode) {
+                var hash = dependencyNode.calculate();
+                hashMap[file] = hash;
+                dependency.raw = feTreeUtil.getHashedFile(
+                    dependency.raw,
+                    hash
+                );
+                return dependency;
+            }
+        });
+    }
+
+    for (var key in hashFileMap) {
+        feTree.updateFile(
+            feTreeUtil.getHashedFile(
+                key,
+                hashMap[key] || hashFileMap[key].calculate()
+            ),
+            key
+        );
+    }
 
 };
 
