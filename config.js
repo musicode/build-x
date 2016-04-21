@@ -296,12 +296,12 @@ exports.sourceAmdConfig = {
         },
         {
             name: 'cc',
-            location: '../dep/cc/1.0.0/src',
+            location: '../dep/cc/1.0.2/src',
             main: 'main'
         },
         {
             name: 'custom',
-            location: '../dep/cc/1.0.0/custom'
+            location: '../dep/cc/1.0.2/custom'
         },
         {
             name: 'SwfStore',

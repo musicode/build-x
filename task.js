@@ -233,31 +233,25 @@ exports.updateReference = function () {
 // md5 化整个项目
 exports.cleanCache = function () {
 
-    var hashNodes = [ ];
+    var hashNodes = { };
 
     var dependencyMap = feTree.dependencyMap;
     for (var key in dependencyMap) {
-        var node = dependencyMap[key];
         if (Array.isArray(config.hashFiles)
             && feTreeUtil.match(key, config.hashFiles)
         ) {
-            hashNodes.push(node);
-            feTree.updateFile(
-                feTreeUtil.getHashedFile(
-                    key,
-                    node.calculate()
-                ),
-                key
-            );
+            hashNodes[key] = dependencyMap[key];
         }
     }
 
+    var hashNodeKeys = Object.keys(hashNodes);
+
     // 修改模板里的引用
     var pageNodes = pageProcessor.nodes;
-    if (hashNodes.length > 0 && Array.isArray(pageNodes)) {
+    if (hashNodeKeys.length > 0 && Array.isArray(pageNodes)) {
         pageNodes.forEach(function (node) {
             config.walkNode(node, function (dependency, node) {
-                var dependencyNode = dependencyMap[dependency.file];
+                var dependencyNode = hashNodes[dependency.file];
                 if (dependencyNode) {
                     dependency.raw = feTreeUtil.getHashedFile(
                         dependency.raw,
@@ -268,6 +262,20 @@ exports.cleanCache = function () {
             });
         });
     }
+
+
+    hashNodeKeys.forEach(
+        function (file) {
+            var node = hashNodes[file];
+            feTree.updateFile(
+                feTreeUtil.getHashedFile(
+                    file,
+                    node.calculate()
+                ),
+                file
+            );
+        }
+    );
 
 };
 
