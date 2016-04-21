@@ -259,17 +259,23 @@ exports.cleanCache = function () {
         });
     }
 
+    var getNodeHash = function (node) {
+        var hash = hashMap[node.file];
+        if (!hash) {
+            hash =
+            hashMap[node.file] = node.calculate();
+        }
+        return hash;
+    };
 
     for (var key in rootFileMap) {
         config.walkNode(rootFileMap[key], function (dependency, node) {
             var file = dependency.file;
             var dependencyNode = hashFileMap[file];
             if (dependencyNode) {
-                var hash = dependencyNode.calculate();
-                hashMap[file] = hash;
                 dependency.raw = feTreeUtil.getHashedFile(
                     dependency.raw,
-                    hash
+                    getNodeHash(dependencyNode)
                 );
                 return dependency;
             }
@@ -280,7 +286,7 @@ exports.cleanCache = function () {
         feTree.updateFile(
             feTreeUtil.getHashedFile(
                 key,
-                hashMap[key] || hashFileMap[key].calculate()
+                getNodeHash(hashFileMap[key])
             ),
             key
         );
