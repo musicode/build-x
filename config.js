@@ -308,7 +308,22 @@ exports.sourceAmdConfig = {
             location: '../dep/SwfStore/0.0.1/src',
             main: 'SwfStore'
         }
-    ]
+    ],
+    combine: {
+        exclude: [
+            'echarts',
+            'echarts/**/*',
+            'cobble',
+            'cobble/**/*',
+            'moment',
+            'image-crop',
+            'audioPlayer',
+            'underscore',
+            'TextClipboard',
+            'common/store',
+            'common/service'
+        ]
+    }
 };
 
 exports.outputAmdConfig = exports.getOutputAmdConfig(

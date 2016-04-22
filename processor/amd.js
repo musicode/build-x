@@ -100,21 +100,6 @@ exports.build = function (node, dependencyMap) {
             };
         }
     };
-    amdConfig.combine = {
-        exclude: [
-            'echarts',
-            'echarts/**/*',
-            'cobble',
-            'cobble/**/*',
-            'moment',
-            'image-crop',
-            'audioPlayer',
-            'underscore',
-            'TextClipboard',
-            'common/store',
-            'common/service'
-        ]
-    };
     amdConfig.fileReader = {
         js: function (file) {
             var node = dependencyMap[file];
