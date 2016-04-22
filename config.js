@@ -22,8 +22,8 @@ exports.projectDir = projectDir;
 exports.outputDir = outputDir;
 exports.srcDir = srcDir;
 
-// 文件 md5 的存储路径
-exports.hashFile = null;
+exports.sourceHashFile = null;
+exports.outputHashFile = null;
 
 exports.total = false;
 exports.release = false;
@@ -178,6 +178,20 @@ exports.htmlRules = [
                 amdConfig
             );
         }
+    },
+    {
+        pattern: /data-module-path\s*=\s*['"]?[^'" ]+['"]?/g,
+        match: function (result, file, amdConfig) {
+            var terms = result.split('=');
+            var id = terms[1].trim();
+            if (id.indexOf('$') === 0) {
+                return;
+            }
+            return feTreeRule.parseAmdDependencies(
+                id,
+                amdConfig
+            );
+        }
     }
 ];
 
@@ -296,12 +310,12 @@ exports.sourceAmdConfig = {
         },
         {
             name: 'cc',
-            location: '../dep/cc/1.0.2/src',
+            location: '../dep/cc/1.0.0/src',
             main: 'main'
         },
         {
             name: 'custom',
-            location: '../dep/cc/1.0.2/custom'
+            location: '../dep/cc/1.0.0/custom'
         },
         {
             name: 'SwfStore',
@@ -320,8 +334,8 @@ exports.sourceAmdConfig = {
             'audioPlayer',
             'underscore',
             'TextClipboard',
-            'common/store',
-            'common/service'
+            'common/store*',
+            'common/service*'
         ]
     }
 };

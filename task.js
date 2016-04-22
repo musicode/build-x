@@ -18,8 +18,11 @@ var htmlProcessor = require('./processor/html');
 var pageProcessor = require('./processor/page');
 var otherProcessor = require('./processor/other');
 
-// 所有文件的 md5
-var fileHash = { };
+// 源文件的 md5
+var sourceFileHash = { };
+
+// md5 化的文件的 md5
+var outputFileHash = { };
 
 // 已经输出过的文件
 var outputedFile = { };
@@ -71,7 +74,7 @@ exports.compareFile = function () {
     if (!config.total) {
 
         var prevHashMap = feTreeUtil.readJSON(
-            config.hashFile
+            config.sourceHashFile
         );
 
         if (prevHashMap) {
@@ -103,7 +106,7 @@ exports.compareFile = function () {
 
     }
 
-    fileHash = hashMap;
+    sourceFileHash = hashMap;
 
 };
 
@@ -256,40 +259,54 @@ exports.cleanCache = function () {
         });
     }
 
+    var prevHashMap = feTreeUtil.readJSON(
+        config.outputHashFile
+    );
+
+    if (prevHashMap) {
+        outputFileHash = prevHashMap;
+    }
+
     var buildNodes = [ ];
 
     var buildDependency = function (dependency, node, different, same) {
         var file = dependency.file;
+        // 当增量 build 时，hashFileMap 可能没有对应的文件
         var dependencyNode = hashFileMap[file];
-        if (dependencyNode) {
+        var dependencyHash = dependencyNode
+            ? dependencyNode.md5
+            : outputFileHash[file];
+
+        if (dependencyHash) {
             if (file !== node.file) {
-                return different && different(dependency, dependencyNode);
+                return different && different(dependency, dependencyHash);
             }
             else {
-                return same && same(dependency, dependencyNode);
+                return same && same(dependency, dependencyHash);
             }
         }
     };
 
     var hashMap = { };
-    var getNodeHash = function (node) {
-        var hash = hashMap[node.file];
-        if (!hash) {
-            hash = hashMap[node.file] = node.md5;
+    var getNodeHash = function (file, hash) {
+        var value = hashMap[file];
+        if (!value) {
+            value = hashMap[file] = hash;
         }
-        return hash;
+        return value;
     };
 
     var fileChanges = { };
 
-    var updateDependency = function (dependency, dependencyNode) {
+    var updateDependency = function (dependency, dependencyHash) {
+        var file = dependency.file;
         dependency.raw = feTreeUtil.getHashedFile(
             dependency.raw,
-            getNodeHash(dependencyNode)
+            getNodeHash(file, dependencyHash)
         );
-        fileChanges[dependencyNode.file] = feTreeUtil.getHashedFile(
-            dependencyNode.file,
-            getNodeHash(dependencyNode)
+        fileChanges[file] = feTreeUtil.getHashedFile(
+            file,
+            getNodeHash(file, dependencyHash)
         );
         return dependency;
     };
@@ -308,7 +325,7 @@ exports.cleanCache = function () {
                         dependency,
                         node,
                         updateDependency,
-                        function (dependency, dependencyNode) {
+                        function (dependency) {
                             promises.push(
                                 new Promise(function (resolve) {
                                     config.walkNode(node, function (dependency, node) {
@@ -355,6 +372,7 @@ exports.cleanCache = function () {
                     key
                 );
             }
+            feTreeUtil.extend(outputFileHash, hashMap);
             resolve();
         });
     });
@@ -382,8 +400,13 @@ exports.outputFile = function () {
 exports.complete = function () {
 
     feTreeUtil.writeJSON(
-        config.hashFile,
-        fileHash
+        config.sourceHashFile,
+        sourceFileHash
+    );
+
+    feTreeUtil.writeJSON(
+        config.outputHashFile,
+        outputFileHash
     );
 
 };
