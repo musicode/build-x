@@ -1,0 +1,8 @@
+# 如果项目文件太大，可通过 --max-old-space-size（node 自带参数）参数配置最大使用内存
+#        release 参数：是否压缩
+#          total 参数：是否全量
+# sourceHashFile 参数：源文件的 file->md5 表，增量 build 时用于对比文件变化
+# outputHashFile 参数：输出文件的 file->md5 表
+                      增量 build 时，如果文件没有变化，就不会计算 md5
+                      因此需要一个文件存储上一次的所有输出文件的 md5 值
+node --max-old-space-size=2500 index.js --release=1 --total=0 --sourceHashFile=$output/sourceHash.json --outputHashFile=$output/outputHash.json
