@@ -82,7 +82,7 @@ exports.build = function (node, dependencyMap) {
         var extname = path.extname(raw).toLowerCase();
 
         var isTpl = extname === '.html'
-            || extname === '.tpl'
+            || extname === '.tpl';
 
         var isStyle = extname === '.css'
             || extname === '.styl'
@@ -104,10 +104,7 @@ exports.build = function (node, dependencyMap) {
         js: function (file) {
             var node = dependencyMap[file];
             if (node) {
-                var code = node.content.toString();
-                return config.release
-                    ? script.uglify(code)
-                    : code;
+                return node.content.toString();
             }
         },
         css: function (file) {
@@ -146,9 +143,10 @@ exports.build = function (node, dependencyMap) {
         file: node.file,
         content: node.content.toString(),
         config: amdConfig,
-        minify: config.release,
         callback: function (code) {
-            node.content = code;
+            node.content = config.release
+                ? script.uglify(code)
+                : code;
         }
     });
 

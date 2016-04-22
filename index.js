@@ -18,6 +18,9 @@ config.sourceHashFile = argv.sourceHashFile || path.join(config.projectDir, 'sou
 // 带有 md5 的输出文件存放位置，便于下次增量编译时直接取值
 config.outputHashFile = argv.outputHashFile || path.join(config.projectDir, 'outputHash.json')
 
+config.sourceAmdConfig.minify =
+config.outputAmdConfig.minify = config.release;
+
 var totalBenchmark = feTreeUtil.benchmark('总耗时：');
 
 
