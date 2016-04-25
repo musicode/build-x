@@ -20,7 +20,7 @@
     "amd-deploy": "^1.0.31",
     "autoprefixer": "^6.3.6",
     "clean-css": "^3.4.12",
-    "fe-tree": "0.0.12",
+    "fe-tree": "0.0.13",
     "fs-extended": "^0.2.1",
     "glob": "^7.0.3",
     "html2js": "^0.2.0",
