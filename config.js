@@ -353,6 +353,10 @@ exports.processDependency = function (dependency, node) {
         return;
     }
 
+    if (dependency.amd && !dependency.file) {
+        return;
+    }
+
     if (!file) {
 
         var prefix2Dir = { };
