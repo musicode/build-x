@@ -49,7 +49,7 @@ exports.build = function (node) {
         .set('filename', node.file)
         .set('compress', config.release)
         .define('url', stylus.resolver({
-            nocheck: true
+            paths: exports.paths
         }))
         .render(function (error, output) {
             if (error) {
