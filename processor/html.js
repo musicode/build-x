@@ -14,7 +14,11 @@ exports.is = function (node) {
 };
 
 exports.build = function (node) {
-
+    var content = node.content.toString();
+    var newContent = config.replaceContent(content, 'html');
+    if (content !== newContent) {
+        node.content = newContent;
+    }
 };
 
 

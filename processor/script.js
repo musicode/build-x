@@ -13,8 +13,13 @@ exports.is = function (node) {
 };
 
 exports.build = function (node) {
+    var content = node.content.toString();
+    var newContent = config.replaceContent(content, 'script');
     if (config.release) {
-        node.content = exports.uglify(node.content.toString());
+        newContent = exports.uglify(newContent);
+    }
+    if (content !== newContent) {
+        node.content = newContent;
     }
 };
 

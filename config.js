@@ -46,6 +46,29 @@ exports.hashFiles = [
     path.join(outputSrcDir, '**/*.*')
 ];
 
+// 全局替换文件内容，比如版本号控制
+exports.replaceContent = function (content, processor) {
+
+    content = feTreeUtil.replace(
+        content,
+        /{build-version}/g,
+        'v=' + Date.now()
+    );
+
+    content = feTreeUtil.replace(
+        content,
+        /\$custom_path\s*=\s*['"]([^'"]+)['"]/g,
+        function ($0, $1) {
+            return $1
+                ? feTreeUtil.replace($0, $1, exports.getOutputFile($1))
+                : $0;
+        }
+    );
+
+    return content;
+
+};
+
 var filterFiles = [
     '**/test/**/*',
     '**/testcases/**/*',

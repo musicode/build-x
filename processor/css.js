@@ -26,7 +26,7 @@ exports.build = function (node) {
                     if (error) {
                         console.error(error);
                     }
-                    node.content = output.styles;
+                    node.content = config.replaceContent(output.styles, 'css');
                     resolve();
                 });
             }

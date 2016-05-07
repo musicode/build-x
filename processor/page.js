@@ -18,22 +18,7 @@ exports.build = function (node) {
 
     var content = node.content.toString();
 
-    var newContent = feTreeUtil.replace(
-        content,
-        /{edp-variable:{version}}/g,
-        Date.now()
-    );
-
-    newContent = feTreeUtil.replace(
-        newContent,
-        /\$custom_path\s*=\s*['"]([^'"]+)['"]/g,
-        function ($0, $1) {
-            return $1
-                ? feTreeUtil.replace($0, $1, config.getOutputFile($1))
-                : $0;
-        }
-    );
-
+    var newContent = config.replaceContent(content, 'page');
     newContent = html.updateAmdConfg(newContent);
 
     if (content !== newContent) {

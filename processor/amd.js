@@ -225,6 +225,7 @@ exports.build = function (node, dependencyMap, reverseDependencyMap) {
             content: node.content.toString(),
             config: amdConfig,
             callback: function (code) {
+                code = config.replaceContent(code, 'amd');
                 node.content = config.release
                     ? script.uglify(code)
                     : code;

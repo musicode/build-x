@@ -56,7 +56,7 @@ exports.build = function (node) {
                 css
                 .autoprefixer(output.css)
                 .then(function (content) {
-                    node.content = content;
+                    node.content = config.replaceContent(content, 'less');
                     resolve();
                 });
             }

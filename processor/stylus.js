@@ -58,7 +58,7 @@ exports.build = function (node) {
             css
             .autoprefixer(output)
             .then(function (content) {
-                node.content = content;
+                node.content = config.replaceContent(content, 'stylus');
                 resolve();
             });
         });
