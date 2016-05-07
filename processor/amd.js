@@ -10,6 +10,11 @@ var feTree = require('fe-tree');
 var feTreeUtil = require('fe-tree/lib/util');
 
 var config = require('../config');
+
+var html = require('./html');
+var css = require('./css');
+var less = require('./less');
+var stylus = require('./stylus');
 var script = require('./script');
 
 exports.extnames = [
@@ -59,8 +64,6 @@ function fileReader(node, suffix) {
 
     feTree.dependencyMap[outputFile] = node;
 
-    //console.log('create node', outputFile)
-
     return content;
 
 }
@@ -73,7 +76,18 @@ function styleReader(node) {
     return fileReader(node, styleSuffix);
 }
 
-exports.build = function (node, dependencyMap) {
+function buildDependencyNode(node, build, dependencyMap, reverseDependencyMap) {
+    var promise = node.buildContent;
+    if (promise && promise.then) {
+        return promise;
+    }
+    node.buildContent = function () {
+        return build(this, dependencyMap, reverseDependencyMap);
+    };
+    return node.build();
+}
+
+exports.build = function (node, dependencyMap, reverseDependencyMap) {
 
     var amdConfig = feTreeUtil.extend({}, config.sourceAmdConfig);
     amdConfig.replaceRequireConfig = config.getOutputAmdConfig;
@@ -82,7 +96,7 @@ exports.build = function (node, dependencyMap) {
         var extname = path.extname(raw).toLowerCase();
 
         var isTpl = extname === '.html'
-            || extname === '.tpl';
+            || extname === '.tpl'
 
         var isStyle = extname === '.css'
             || extname === '.styl'
@@ -104,50 +118,119 @@ exports.build = function (node, dependencyMap) {
         js: function (file) {
             var node = dependencyMap[file];
             if (node) {
+                if (node.buildContent !== true) {
+                    return buildDependencyNode(
+                        node,
+                        exports.build,
+                        dependencyMap,
+                        reverseDependencyMap
+                    )
+                    .then(function () {
+                        return node.content.toString();
+                    });
+                }
                 return node.content.toString();
             }
         },
         css: function (file) {
             var node = dependencyMap[file];
             if (node) {
+                if (node.buildContent !== true) {
+                    return buildDependencyNode(
+                        node,
+                        css.build,
+                        dependencyMap,
+                        reverseDependencyMap
+                    )
+                    .then(function () {
+                        return styleReader(node);
+                    });
+                }
                 return styleReader(node);
             }
         },
         less: function (file) {
             var node = dependencyMap[file];
             if (node) {
+                if (node.buildContent !== true) {
+                    return buildDependencyNode(
+                        node,
+                        less.build,
+                        dependencyMap,
+                        reverseDependencyMap
+                    )
+                    .then(function () {
+                        return styleReader(node);
+                    });
+                }
                 return styleReader(node);
             }
         },
         styl: function (file) {
             var node = dependencyMap[file];
             if (node) {
+                if (node.buildContent !== true) {
+                    return buildDependencyNode(
+                        node,
+                        stylus.build,
+                        dependencyMap,
+                        reverseDependencyMap
+                    )
+                    .then(function () {
+                        return styleReader(node);
+                    });
+                }
                 return styleReader(node);
             }
         },
         html: function (file) {
             var node = dependencyMap[file];
             if (node) {
+                if (node.buildContent !== true) {
+                    return buildDependencyNode(
+                        node,
+                        html.build,
+                        dependencyMap,
+                        reverseDependencyMap
+                    )
+                    .then(function () {
+                        return tplReader(node);
+                    });
+                }
                 return tplReader(node);
             }
         },
         tpl: function (file) {
             var node = dependencyMap[file];
             if (node) {
+                if (node.buildContent !== true) {
+                    return buildDependencyNode(
+                        node,
+                        html.build,
+                        dependencyMap,
+                        reverseDependencyMap
+                    )
+                    .then(function () {
+                        return tplReader(node);
+                    });
+                }
                 return tplReader(node);
             }
         },
     };
 
-    amdDeploy({
-        file: node.file,
-        content: node.content.toString(),
-        config: amdConfig,
-        callback: function (code) {
-            node.content = config.release
-                ? script.uglify(code)
-                : code;
-        }
+    return new Promise(function (resolve, reject) {
+        amdDeploy({
+            file: node.file,
+            content: node.content.toString(),
+            config: amdConfig,
+            callback: function (code) {
+                node.content = config.release
+                    ? script.uglify(code)
+                    : code;
+                resolve();
+            }
+        });
     });
 
 };
