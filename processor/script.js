@@ -24,16 +24,21 @@ exports.build = function (node) {
 };
 
 exports.uglify = function (code) {
-    var result = uglify(code, {
-        fromString: true,
-        compress: {
-            warnings: false,
-            // see https://github.com/ecomfe/edp/issues/230
-            conditionals: false
-        },
-        mangle: {
-            except: ['require', 'exports', 'module']
-        }
-    });
-    return result.code;
+    try {
+        var result = uglify(code, {
+            fromString: true,
+            compress: {
+                warnings: false,
+                // see https://github.com/ecomfe/edp/issues/230
+                conditionals: false
+            },
+            mangle: {
+                except: ['require', 'exports', 'module']
+            }
+        });
+        return result.code;
+    }
+    catch (e) {
+        return code;
+    }
 };
