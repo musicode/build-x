@@ -41,11 +41,6 @@ task.parseSourceTree()
         benchmark();
 
 
-        benchmark = feTreeUtil.benchmark('更新引用路径耗时：');
-        task.updateReference();
-        benchmark();
-
-
         benchmark = feTreeUtil.benchmark('写文件耗时：');
         task.outputFile();
         benchmark();

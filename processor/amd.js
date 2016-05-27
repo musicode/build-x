@@ -10,11 +10,6 @@ var feTree = require('fe-tree');
 var feTreeUtil = require('fe-tree/lib/util');
 
 var config = require('../config');
-
-var html = require('./html');
-var css = require('./css');
-var less = require('./less');
-var stylus = require('./stylus');
 var script = require('./script');
 
 exports.extnames = [
@@ -36,12 +31,13 @@ var styleSuffix = '_css';
 
 function fileReader(node, suffix) {
 
-    var sourceFile = node.file;
-    var resourceId = filePathToResourceId(sourceFile, config.sourceAmdConfig)[0];
+    var outputFile = node.file;
+
+    var resourceId = filePathToResourceId(outputFile, config.outputAmdConfig)[0];
     resourceId = feTreeUtil.removeExtname(resourceId);
 
     var moduleId = resourceId + suffix;
-    var outputFile = resourceIdToFilePath(moduleId, config.outputAmdConfig);
+    outputFile = resourceIdToFilePath(moduleId, config.outputAmdConfig);
 
     var dependencyNode = feTree.dependencyMap[outputFile];
     if (dependencyNode) {
@@ -68,6 +64,10 @@ function fileReader(node, suffix) {
 
 }
 
+function rawReader(node) {
+    return node.content.toString();
+}
+
 function tplReader(node) {
     return fileReader(node, tplSuffix);
 }
@@ -76,15 +76,30 @@ function styleReader(node) {
     return fileReader(node, styleSuffix);
 }
 
-function buildDependencyNode(node, build, dependencyMap, reverseDependencyMap) {
-    var promise = node.buildContent;
-    if (promise && promise.then) {
-        return promise;
+function readDependency(dependencyMap, file, reader) {
+    var outputFile = config.getOutputFile(file);
+
+    // 为了更好的可用性，非 MD5 版本最好要输出
+    // 因此在构建 AMD 模块时，非 MD5 版本的资源一定有
+    var extname = path.extname(outputFile);
+    var basename = path.basename(outputFile, extname);
+    var lastIndex = basename.lastIndexOf('_');
+    if (lastIndex >= 0) {
+        var rawTerm = basename.substr(0, lastIndex);
+        var hashTerm = basename.substr(lastIndex + 1);
+        if (hashTerm.length === 10) {
+            outputFile = path.join(
+                path.dirname(outputFile),
+                rawTerm + extname
+            )
+        }
     }
-    node.buildContent = function () {
-        return build(this, dependencyMap, reverseDependencyMap);
-    };
-    return node.build();
+
+    var node = dependencyMap[outputFile];
+    if (node) {
+        var content = reader(node);
+        return content;
+    }
 }
 
 exports.build = function (node, dependencyMap, reverseDependencyMap) {
@@ -116,106 +131,22 @@ exports.build = function (node, dependencyMap, reverseDependencyMap) {
     };
     amdConfig.fileReader = {
         js: function (file) {
-            var node = dependencyMap[file];
-            if (node) {
-                if (node.buildContent !== true) {
-                    return buildDependencyNode(
-                        node,
-                        exports.build,
-                        dependencyMap,
-                        reverseDependencyMap
-                    )
-                    .then(function () {
-                        return node.content.toString();
-                    });
-                }
-                return node.content.toString();
-            }
+            return readDependency(dependencyMap, file, rawReader);
         },
         css: function (file) {
-            var node = dependencyMap[file];
-            if (node) {
-                if (node.buildContent !== true) {
-                    return buildDependencyNode(
-                        node,
-                        css.build,
-                        dependencyMap,
-                        reverseDependencyMap
-                    )
-                    .then(function () {
-                        return styleReader(node);
-                    });
-                }
-                return styleReader(node);
-            }
+            return readDependency(dependencyMap, file, styleReader);
         },
         less: function (file) {
-            var node = dependencyMap[file];
-            if (node) {
-                if (node.buildContent !== true) {
-                    return buildDependencyNode(
-                        node,
-                        less.build,
-                        dependencyMap,
-                        reverseDependencyMap
-                    )
-                    .then(function () {
-                        return styleReader(node);
-                    });
-                }
-                return styleReader(node);
-            }
+            return readDependency(dependencyMap, file, styleReader);
         },
         styl: function (file) {
-            var node = dependencyMap[file];
-            if (node) {
-                if (node.buildContent !== true) {
-                    return buildDependencyNode(
-                        node,
-                        stylus.build,
-                        dependencyMap,
-                        reverseDependencyMap
-                    )
-                    .then(function () {
-                        return styleReader(node);
-                    });
-                }
-                return styleReader(node);
-            }
+            return readDependency(dependencyMap, file, styleReader);
         },
         html: function (file) {
-            var node = dependencyMap[file];
-            if (node) {
-                if (node.buildContent !== true) {
-                    return buildDependencyNode(
-                        node,
-                        html.build,
-                        dependencyMap,
-                        reverseDependencyMap
-                    )
-                    .then(function () {
-                        return tplReader(node);
-                    });
-                }
-                return tplReader(node);
-            }
+            return readDependency(dependencyMap, file, tplReader);
         },
         tpl: function (file) {
-            var node = dependencyMap[file];
-            if (node) {
-                if (node.buildContent !== true) {
-                    return buildDependencyNode(
-                        node,
-                        html.build,
-                        dependencyMap,
-                        reverseDependencyMap
-                    )
-                    .then(function () {
-                        return tplReader(node);
-                    });
-                }
-                return tplReader(node);
-            }
+            return readDependency(dependencyMap, file, tplReader);
         },
     };
 
