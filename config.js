@@ -5,6 +5,8 @@ var feTree = require('fe-tree');
 var feTreeRule = require('fe-tree/lib/rule');
 var feTreeUtil = require('fe-tree/lib/util');
 
+var projectName = '';
+
 var srcName = 'src';
 var depName = 'dep';
 var outputSrcName = 'asset';
@@ -225,13 +227,18 @@ var extnameMap = {
 
 exports.getOutputFile = function (file) {
 
-    if (file.indexOf(outputDir) === 0) {
+    var outputRootDir = path.join(outputDir, projectName);
+
+    if (file.indexOf(outputRootDir) === 0) {
         return file;
     }
 
     if (file.indexOf(projectDir) === 0) {
         var relativePath = path.relative(projectDir, file);
-        file = path.join(outputDir, relativePath);
+        file = path.join(outputRootDir, relativePath);
+    }
+    else if (file.indexOf('/') === 0) {
+        file = path.join(path.sep, projectName, file.substr(1));
     }
 
     file = feTreeUtil.replace(
