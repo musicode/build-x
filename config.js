@@ -16,7 +16,7 @@ var projectDir = path.join(__dirname, '..');
 var srcDir = path.join(projectDir, srcName);
 var depDir = path.join(projectDir, depName);
 
-var outputDir = path.join(projectDir, 'output');
+var outputDir = path.join(projectDir, 'output', projectName);
 var outputSrcDir = path.join(outputDir, outputSrcName);
 var outputDepDir = path.join(outputDir, outputDepName);
 
@@ -227,17 +227,13 @@ var extnameMap = {
 
 exports.getOutputFile = function (file) {
 
-    var outputRootDir = path.join(outputDir, projectName);
-
-    if (file.indexOf(outputRootDir) === 0) {
-        return file;
-    }
-
-    if (file.indexOf(projectDir) === 0) {
+    if (file.indexOf(outputDir) !== 0
+        && file.indexOf(projectDir) == 0
+    ) {
         var relativePath = path.relative(projectDir, file);
-        file = path.join(outputRootDir, relativePath);
+        file = path.join(outputDir, relativePath);
     }
-    else if (file.indexOf('/') === 0) {
+    else if (projectName && file.indexOf('/') === 0) {
         file = path.join(path.sep, projectName, file.substr(1));
     }
 

@@ -206,13 +206,13 @@ exports.buildFile = function () {
 
 
                     // 文件依赖路径替换完成后，计算文件的 md5
-                    var fileHash
+                    var fileHash;
                     if (needHash) {
                         fileHash = feTreeUtil.match(outputFile, config.hashFiles)
                             ? this.md5
-                            : null
+                            : null;
                     }
-                    outputFileHash[outputFile] = fileHash
+                    outputFileHash[outputFile] = fileHash;
 
 
                     this.onBuildStart =
@@ -237,7 +237,10 @@ exports.buildFile = function () {
 
         var promises = buildNodes.map(
             function (node) {
-                return node.build();
+                return node.build()
+                .catch(function (e) {
+                    console.log(e);
+                });
             }
         );
 
