@@ -22,7 +22,7 @@ var otherProcessor = require('./processor/other');
 var sourceFileHash = { };
 
 // md5 化的文件的 md5
-var outputFileHash = feTreeUtil.readJSON(config.outputHashFile) || {};
+var outputFileHash = { };
 
 // 已经输出过的文件
 var outputedFile = { };
@@ -107,7 +107,7 @@ exports.compareFile = function () {
 
                     // AMD 模块的依赖即使没变也要 build
                     // 因为打包合并总是要用的
-                    var node = dependencyMap[key];
+                    var node = dependencyMap[file];
                     if (amdProcessor.is(node)) {
                         changes = [ ];
                         config.walkNode(node, function (dependency) {
@@ -136,6 +136,11 @@ exports.buildFile = function () {
     var reverseDependencyMap = feTree.reverseDependencyMap;
 
     var needHash = Array.isArray(config.hashFiles);
+
+    var prevHashMap = feTreeUtil.readJSON(config.outputHashFile);
+    if (prevHashMap) {
+        feTreeUtil.extend(outputFileHash, prevHashMap);
+    }
 
     // 需要 build 的节点
     var buildNodes = [ ];
@@ -300,7 +305,9 @@ exports.outputFile = function () {
     for (var file in dependencyMap) {
         var node = dependencyMap[file];
         var md5 = node.md5;
-        if (outputedFile[file] !== md5) {
+        if (file.indexOf(config.outputDir) === 0
+          && outputedFile[file] !== md5
+        ) {
             console.log('输出文件：', file);
             outputedFile[file] = md5;
             fs.createFileSync(file, node.content);
