@@ -9,6 +9,7 @@ var projectName = '';
 
 var srcName = 'src';
 var depName = 'dep';
+var outputName = 'output';
 var outputSrcName = 'asset';
 var outputDepName = 'dep';
 
@@ -16,7 +17,7 @@ var projectDir = path.join(__dirname, '..');
 var srcDir = path.join(projectDir, srcName);
 var depDir = path.join(projectDir, depName);
 
-var outputDir = path.join(projectDir, 'output', projectName);
+var outputDir = path.join(projectDir, outputName, projectName);
 var outputSrcDir = path.join(outputDir, outputSrcName);
 var outputDepDir = path.join(outputDir, outputDepName);
 
@@ -37,9 +38,7 @@ exports.pageFiles = [
 
 // 静态资源
 exports.staticFiles = [
-    // src 会自动分析依赖
-    // path.join(srcDir, '**/*.*'),
-    // 加上 dep 是怕有第三方用了其中的文件
+    path.join(srcDir, '**/*.*'),
     path.join(depDir, '**/*.*'),
 ];
 
@@ -115,24 +114,21 @@ var filterDependencies = [
 // 文件路径中有这些字符就认为是无法解析的
 var illegalCharInFilePath = /[\${}]/;
 
-var commonPrefix2Dir = {
-    '/src/': srcDir,
-    'src/': srcDir,
-    '/asset/': outputSrcDir,
-    'asset/': outputSrcDir,
-};
+var commonPrefix2Dir = {};
+commonPrefix2Dir['/' + srcName + '/'] = srcDir;
+commonPrefix2Dir[srcName + '/'] = srcDir;
+commonPrefix2Dir['/' + outputSrcName + '/'] = outputSrcDir;
+commonPrefix2Dir[outputSrcName + '/'] = outputSrcDir;
 
-var sourcePrefix2Dir = {
-    '{{ $static_origin }}/': projectDir,
-    '/dep/': depDir,
-    'dep/': depDir,
-};
+var sourcePrefix2Dir = {};
+sourcePrefix2Dir['{{ $static_origin }}/'] = projectDir;
+sourcePrefix2Dir['/' + depName + '/'] = depDir;
+sourcePrefix2Dir[depName + '/'] = depDir;
 
-var outputPrefix2Dir = {
-    '{{ $static_origin }}/': outputDir,
-    '/dep/': outputDepDir,
-    'dep/': outputDepDir,
-};
+var outputPrefix2Dir = {};
+outputPrefix2Dir['{{ $static_origin }}/'] = outputDir;
+outputPrefix2Dir['/' + outputDepName + '/'] = outputDepDir;
+outputPrefix2Dir[outputDepName + '/'] = outputDepDir;
 
 var amdPlugins = [
     'jquery', 'html', 'text', 'tpl', 'css', 'js'
@@ -237,13 +233,25 @@ exports.getOutputFile = function (file) {
         file = path.join(path.sep, projectName, file.substr(1));
     }
 
-    file = feTreeUtil.replace(
-        file,
-        new RegExp('\\b' + srcName + '\\b', 'g'),
-        function ($0) {
-            return $0.replace(srcName, outputSrcName);
-        }
-    );
+    if (srcName !== outputSrcName) {
+        file = feTreeUtil.replace(
+            file,
+            new RegExp('\\b' + srcName + '\\b', 'g'),
+            function ($0) {
+                return $0.replace(srcName, outputSrcName);
+            }
+        );
+    }
+
+    if (depName !== outputDepName) {
+        file = feTreeUtil.replace(
+            file,
+            new RegExp('\\b' + depName + '\\b', 'g'),
+            function ($0) {
+                return $0.replace(depName, outputDepName);
+            }
+        );
+    }
 
     var extname = path.extname(file).toLowerCase();
     if (extnameMap[extname]) {
