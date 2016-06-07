@@ -127,6 +127,8 @@ sourcePrefix2Dir[depName + '/'] = depDir;
 
 var outputPrefix2Dir = {};
 outputPrefix2Dir['{{ $static_origin }}/'] = outputDir;
+outputPrefix2Dir['/' + depName + '/'] = outputDepDir;
+outputPrefix2Dir[depName + '/'] = outputDepDir;
 outputPrefix2Dir['/' + outputDepName + '/'] = outputDepDir;
 outputPrefix2Dir[outputDepName + '/'] = outputDepDir;
 
@@ -308,68 +310,29 @@ exports.sourceAmdConfig = {
     paths: { },
     packages: [
         {
-            name: 'cobble',
-            location: '../dep/cobble/0.3.28/src',
+            name: 'cc',
+            location: '../dep/cc/1.1.0/src',
             main: 'main'
         },
         {
             name: 'moment',
-            location: '../dep/moment/2.7.0/src',
+            location: '../dep/moment/2.10.6/src',
             main: 'moment'
-        },
-        {
-            name: 'imageCrop',
-            location: '../dep/image-crop/0.0.1/src',
-            main: 'imageCrop'
-        },
-        {
-            name: 'underscore',
-            location: '../dep/underscore/1.6.0/src',
-            main: 'underscore'
-        },
-        {
-            name: 'audioPlayer',
-            location: '../dep/audioPlayer/0.0.1/src',
-            main: 'audioPlayer'
-        },
-        {
-            name: 'TextClipboard',
-            location: '../dep/TextClipboard/0.0.3/src',
-            main: 'TextClipboard'
-        },
-        {
-            name: 'echarts',
-            location: '../dep/echarts/2.1.10/src',
-            main: 'echarts'
-        },
-        {
-            name: 'cc',
-            location: '../dep/cc/1.0.0/src',
-            main: 'main'
-        },
-        {
-            name: 'custom',
-            location: '../dep/cc/1.0.0/custom'
         },
         {
             name: 'SwfStore',
             location: '../dep/SwfStore/0.0.1/src',
             main: 'SwfStore'
+        },
+        {
+            'name': 'wechat',
+            'location': 'https://res.wx.qq.com/open/js',
+            'main': 'jweixin-1.0.0'
         }
     ],
     combine: {
         exclude: [
-            'echarts',
-            'echarts/**/*',
-            'cobble',
-            'cobble/**/*',
-            'moment',
-            'image-crop',
-            'audioPlayer',
-            'underscore',
-            'TextClipboard',
-            'common/store*',
-            'common/service*'
+            'moment'
         ]
     }
 };
