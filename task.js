@@ -91,36 +91,43 @@ exports.compareFile = function () {
                 }
             }
 
-            var updateChange = function (changes) {
+            var updateChange = function (changes, buildParent, buildChild) {
                 changes.forEach(function (file) {
                     var node = dependencyMap[file];
-                    if (node.filter === false) {
+                    if (!node || node.filter === false) {
                         return;
                     }
                     node.filter = false;
 
+                    // 它依赖了谁
+                    var changes = node.children.map(function (child) {
+                        return child.file;
+                    });
+                    if (changes && buildChild) {
+                        updateChange(changes, buildParent, buildChild);
+                    }
+
                     // 谁依赖了它
-                    var changes = feTree.reverseDependencyMap[file];
-                    if (changes) {
-                        updateChange(changes);
+                    changes = feTree.reverseDependencyMap[file];
+                    if (changes && buildParent) {
+                        updateChange(changes, buildParent, buildChild);
                     }
 
                     // AMD 模块的依赖即使没变也要 build
-                    // 因为打包合并总是要用的
-                    var node = dependencyMap[file];
                     if (amdProcessor.is(node)) {
                         changes = [ ];
                         config.walkNode(node, function (dependency) {
                             changes.push(dependency.file);
                             return dependency;
                         });
-                        updateChange(changes);
+                        updateChange(changes, false, true);
                     }
 
                 });
             };
 
-            updateChange(changes);
+            updateChange(changes, true, false);
+
         }
 
     }
