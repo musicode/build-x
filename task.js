@@ -81,15 +81,29 @@ exports.compareFile = function () {
 
             var changes = [ ];
 
-            for (var key in hashMap) {
-                var isChange = hashMap[key] !== prevHashMap[key];
-                if (isChange) {
+            // 这里需要收集全部的 key，避免删除文件后，hashMap 里没有对应的 key
+            var keys = [];
+            var addKey = function (key) {
+                if (keys.indexOf(key) < 0) {
+                    keys.push(key);
+                }
+            };
+
+            [
+                Object.keys(hashMap),
+                Object.keys(prevHashMap)
+            ].forEach(function (item) {
+                item.forEach(addKey);
+            });
+
+            keys.forEach(function (key) {
+                if (hashMap[key] !== prevHashMap[key]) {
                     changes.push(key);
                 }
                 else {
                     dependencyMap[key].filter = true;
                 }
-            }
+            });
 
             var updateChange = function (changes, buildParent, buildChild) {
                 changes.forEach(function (file) {
