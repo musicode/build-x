@@ -225,14 +225,14 @@ var extnameMap = {
 
 exports.getOutputFile = function (file) {
 
-    if (file.indexOf(outputDir) !== 0
-        && file.indexOf(projectDir) == 0
-    ) {
-        var relativePath = path.relative(projectDir, file);
-        file = path.join(outputDir, relativePath);
-    }
-    else if (projectName && file.indexOf('/') === 0) {
-        file = path.join(path.sep, projectName, file.substr(1));
+    if (file.indexOf(outputDir) !== 0) {
+        if (file.indexOf(projectDir) == 0) {
+            var relativePath = path.relative(projectDir, file);
+            file = path.join(outputDir, relativePath);
+        }
+        else if (projectName && file.indexOf('/') === 0) {
+            file = path.join(path.sep, projectName, file.substr(1));
+        }
     }
 
     if (srcName !== outputSrcName) {
