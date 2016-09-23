@@ -47,7 +47,7 @@ function fileReader(node, suffix) {
     var code = html2js(
         node.content.toString(),
         {
-            mode: config.release ? 'compress' : undefined
+            mode: 'compress'
         }
     );
 
