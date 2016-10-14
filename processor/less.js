@@ -15,6 +15,9 @@ exports.paths = [
 ];
 
 function isRootStyle(node, dependencyMap, reverseDependencyMap) {
+    if (config.staticFiles.indexOf(node.file) >= 0) {
+        return true;
+    }
     var files = reverseDependencyMap[node.file];
     return files
         && files.filter(
