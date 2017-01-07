@@ -162,12 +162,7 @@ exports.build = function (node, dependencyMap, reverseDependencyMap) {
                     code = script.uglify(code);
                 }
                 if (config.amdclean) {
-                    try {
-                        code = amdClean.clean(code);
-                    }
-                    catch (e) {
-                        console.log(e)
-                    }
+                    code = amdClean.clean(code);
                 }
                 node.content = code;
                 resolve();
