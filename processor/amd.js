@@ -1,4 +1,5 @@
 var path = require('path');
+var amdClean = require('amdclean');
 var amdDeploy = require('amd-deploy');
 var filePathToResourceId = require('amd-deploy/lib/filePathToResourceId');
 var resourceIdToFilePath = require('amd-deploy/lib/resourceIdToFilePath');
@@ -111,7 +112,7 @@ exports.build = function (node, dependencyMap, reverseDependencyMap) {
         var extname = path.extname(raw).toLowerCase();
 
         var isTpl = extname === '.html'
-            || extname === '.tpl'
+            || extname === '.tpl';
 
         var isStyle = extname === '.css'
             || extname === '.styl'
@@ -157,9 +158,18 @@ exports.build = function (node, dependencyMap, reverseDependencyMap) {
             config: amdConfig,
             callback: function (code) {
                 code = config.replaceContent(code, 'amd');
-                node.content = config.release
-                    ? script.uglify(code)
-                    : code;
+                if (config.release) {
+                    code = script.uglify(code);
+                }
+                if (config.amdclean) {
+                    try {
+                        code = amdClean.clean(code);
+                    }
+                    catch (e) {
+                        console.log(e)
+                    }
+                }
+                node.content = code;
                 resolve();
             }
         });
