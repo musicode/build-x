@@ -323,11 +323,15 @@ exports.outputFile = function () {
 
     var dependencyMap = feTree.dependencyMap;
 
+    var outputFiles = config.outputFiles;
+    var needFilter = outputFiles && outputFiles.length > 0;
+
     for (var file in dependencyMap) {
         var node = dependencyMap[file];
         var md5 = node.md5;
         if (file.indexOf(config.outputDir) === 0
           && outputedFile[file] !== md5
+          && (!needFilter || feTreeUtil.match(file, outputFiles))
         ) {
             console.log('输出文件：', file);
             outputedFile[file] = md5;

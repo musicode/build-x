@@ -158,11 +158,11 @@ exports.build = function (node, dependencyMap, reverseDependencyMap) {
             config: amdConfig,
             callback: function (code) {
                 code = config.replaceContent(code, 'amd');
-                if (config.release) {
-                    code = script.uglify(code);
-                }
                 if (config.amdclean) {
                     code = amdClean.clean(code);
+                }
+                if (config.release) {
+                    code = script.uglify(code);
                 }
                 node.content = code;
                 resolve();

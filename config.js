@@ -49,6 +49,11 @@ exports.hashFiles = [
     path.join(outputSrcDir, '**/*.*')
 ];
 
+// 需要输出的文件
+exports.outputFiles = [
+
+];
+
 // 全局替换文件内容，比如版本号控制
 exports.replaceContent = function (content, processor) {
 
