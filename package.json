@@ -17,17 +17,17 @@
   },
   "homepage": "https://github.com/musicode/build-x#readme",
   "dependencies": {
-    "amd-deploy": "^1.0.31",
+    "amd-deploy": "^1.1.2",
     "amdclean": "^2.7.0",
     "autoprefixer": "^6.3.6",
     "clean-css": "^3.4.12",
-    "fe-tree": "0.0.13",
+    "fe-tree": "0.0.14",
     "fs-extended": "^0.2.1",
     "glob": "^7.0.3",
     "html2js": "^0.2.0",
     "less": "^2.7.2",
     "stylus": "^0.54.2",
-    "uglifyjs": "^2.4.10",
+    "uglify-js": "^3.0.9",
     "yargs": "^3.18.0",
     "postcss": "^5.0.19"
   }

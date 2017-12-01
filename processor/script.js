@@ -1,4 +1,4 @@
-var uglify = require('uglifyjs').minify;
+var uglify = require('uglify-js').minify;
 var config = require('../config');
 var amd = require('./amd');
 
@@ -26,7 +26,6 @@ exports.build = function (node) {
 exports.uglify = function (code) {
     try {
         var result = uglify(code, {
-            fromString: true,
             compress: {
                 warnings: false,
                 // see https://github.com/ecomfe/edp/issues/230
