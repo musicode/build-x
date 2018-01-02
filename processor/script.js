@@ -1,4 +1,4 @@
-var uglify = require('uglify-js').minify;
+var uglify = require('uglify-js');
 var config = require('../config');
 var amd = require('./amd');
 
@@ -25,16 +25,19 @@ exports.build = function (node) {
 
 exports.uglify = function (code) {
     try {
-        var result = uglify(code, {
+        var result = uglify.minify(code, {
             compress: {
-                warnings: false,
-                // see https://github.com/ecomfe/edp/issues/230
-                conditionals: false
+              warnings: false,
+              // see https://github.com/ecomfe/edp/issues/230
+              conditionals: false,
             },
             mangle: {
-                except: ['require', 'exports', 'module']
+                reserved: ['require', 'exports', 'module']
             }
         });
+        if (result.error) {
+            console.error(result.error);
+        }
         return result.code;
     }
     catch (e) {
