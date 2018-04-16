@@ -26,9 +26,11 @@
     "glob": "^7.0.3",
     "html2js": "^0.2.0",
     "less": "^2.7.2",
-    "stylus": "^0.54.2",
-    "uglify-js": "^3.0.9",
+    "stylus": "^0.54.5",
+    "uglify-js": "^3.3.10",
     "yargs": "^3.18.0",
-    "postcss": "^5.0.19"
+    "postcss": "^5.0.19",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1"
   }
 }

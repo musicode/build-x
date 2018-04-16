@@ -31,6 +31,7 @@ exports.outputHashFile = null;
 exports.total = false;
 exports.release = false;
 
+exports.babel = false;
 exports.amdclean = false;
 
 // 页面文件，比如 smarty 模板、或 index.html、main.html、app.html 等
