@@ -16,6 +16,7 @@ exports.is = function (node) {
 exports.build = function (node) {
     var content = node.content.toString();
     var newContent = config.replaceContent(content, 'html');
+    newContent = newContent.replace(/\n\s*/g, '');
     if (content !== newContent) {
         node.content = newContent;
     }

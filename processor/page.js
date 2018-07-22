@@ -21,6 +21,8 @@ exports.build = function (node) {
     var newContent = config.replaceContent(content, 'page');
     newContent = html.updateAmdConfg(newContent);
 
+    newContent = newContent.replace(/\n\s*/g, '');
+
     if (content !== newContent) {
         node.content = newContent;
     }
